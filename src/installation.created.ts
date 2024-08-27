@@ -62,14 +62,14 @@ export const createInitialPR = async (
       encoding: "base64",
     });
 
-    // 4. Create a new tree with the updated de.json file
+    // 4. Create a new tree with the updated de.ts file
     const { data: newTree } = await octokit.git.createTree({
       owner,
       repo,
       base_tree: treeSha,
       tree: [
         {
-          path: path.join(path.dirname(baseFilePath), "de.json"),
+          path: path.join(path.dirname(baseFilePath), "de.ts"),
           mode: "100644",
           type: "blob",
           sha: newBlob.sha,
