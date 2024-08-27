@@ -1,0 +1,78 @@
+{
+  "action": "created",
+  "installation": {
+    "id": 54186070,
+    "account": {
+      "login": "jannikbertram",
+      "id": 17082165,
+      "node_id": "MDQ6VXNlcjE3MDgyMTY1",
+      "avatar_url": "https://avatars.githubusercontent.com/u/17082165?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/jannikbertram",
+      "html_url": "https://github.com/jannikbertram",
+      "followers_url": "https://api.github.com/users/jannikbertram/followers",
+      "following_url": "https://api.github.com/users/jannikbertram/following{/other_user}",
+      "gists_url": "https://api.github.com/users/jannikbertram/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/jannikbertram/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/jannikbertram/subscriptions",
+      "organizations_url": "https://api.github.com/users/jannikbertram/orgs",
+      "repos_url": "https://api.github.com/users/jannikbertram/repos",
+      "events_url": "https://api.github.com/users/jannikbertram/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/jannikbertram/received_events",
+      "type": "User",
+      "site_admin": false
+    },
+    "repository_selection": "selected",
+    "access_tokens_url": "https://api.github.com/app/installations/54186070/access_tokens",
+    "repositories_url": "https://api.github.com/installation/repositories",
+    "html_url": "https://github.com/settings/installations/54186070",
+    "app_id": 977183,
+    "app_slug": "colourai",
+    "target_id": 17082165,
+    "target_type": "User",
+    "permissions": {
+      "contents": "read",
+      "metadata": "read",
+      "pull_requests": "write"
+    },
+    "events": ["pull_request"],
+    "created_at": "2024-08-26T21:33:11.000+02:00",
+    "updated_at": "2024-08-26T21:33:11.000+02:00",
+    "single_file_name": null,
+    "has_multiple_single_files": false,
+    "single_file_paths": [],
+    "suspended_by": null,
+    "suspended_at": null,
+    "client_id": "Iv23liBxndsbrsqT3j5b"
+  },
+  "repositories": [
+    {
+      "id": 846695606,
+      "node_id": "R_kgDOMneMtg",
+      "name": "translatable-project",
+      "full_name": "jannikbertram/translatable-project",
+      "private": true
+    }
+  ],
+  "requester": null,
+  "sender": {
+    "login": "jannikbertram",
+    "id": 17082165,
+    "node_id": "MDQ6VXNlcjE3MDgyMTY1",
+    "avatar_url": "https://avatars.githubusercontent.com/u/17082165?v=4",
+    "gravatar_id": "",
+    "url": "https://api.github.com/users/jannikbertram",
+    "html_url": "https://github.com/jannikbertram",
+    "followers_url": "https://api.github.com/users/jannikbertram/followers",
+    "following_url": "https://api.github.com/users/jannikbertram/following{/other_user}",
+    "gists_url": "https://api.github.com/users/jannikbertram/gists{/gist_id}",
+    "starred_url": "https://api.github.com/users/jannikbertram/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/jannikbertram/subscriptions",
+    "organizations_url": "https://api.github.com/users/jannikbertram/orgs",
+    "repos_url": "https://api.github.com/users/jannikbertram/repos",
+    "events_url": "https://api.github.com/users/jannikbertram/events{/privacy}",
+    "received_events_url": "https://api.github.com/users/jannikbertram/received_events",
+    "type": "User",
+    "site_admin": false
+  }
+}
