@@ -14,7 +14,6 @@ export const findFluentResourceFile = async (
       q: query,
     });
 
-    app.log.info(`Search response: ${JSON.stringify(searchResponse.data)}`);
     const baseFile = searchResponse.data.items.find((item) =>
       item.name.toLowerCase().includes("en")
     );

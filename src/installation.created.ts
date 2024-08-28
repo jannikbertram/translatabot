@@ -1,10 +1,10 @@
 import { Probot, ProbotOctokit } from "probot";
+import { getDefaultBranch } from "./github.utils";
+import { defaultConfigYaml } from "./config/defaultConfig";
 import { findFluentResourceFile } from "./translation_file_finder";
-import path from "path";
 
-// TODO: Automatically determine target branch name
-export const MAIN_BRANCH = "main";
-export const INITIALE_BRANCH_NAME = "colour-ai-translate-de-2";
+export const INITIALE_BRANCH_NAME = "colour-ai-config-2";
+const CONFIG_FILE_PATH = ".github/colour-ai-config.yml";
 
 export const createInitialPR = async (
   app: Probot,
@@ -12,99 +12,65 @@ export const createInitialPR = async (
   owner: string,
   repo: string
 ) => {
-  const baseFilePath = await findFluentResourceFile(app, octokit, owner, repo);
-
-  if (!baseFilePath) {
-    app.log.error("No FluentResource file found");
-    return;
-  }
-
-  app.log.info(`Found FluentResource file at ${baseFilePath}`);
+  const commitMessage = "Add Colour AI configuration";
 
   try {
-    const baseFileContent = (await octokit.repos.getContent({
-      owner,
-      repo,
-      path: baseFilePath,
-    })) as { data: { content: string } };
+    const defaultBranch = await getDefaultBranch(octokit, owner, repo);
 
-    // Get the latest commit SHA of the main branch
+    // Create a new branch from the default branch
     const { data: refData } = await octokit.git.getRef({
-      owner,
+      owner: owner,
       repo,
-      ref: `heads/${MAIN_BRANCH}`,
+      ref: `heads/${defaultBranch}`,
     });
 
-    const mainCommitSha = refData.object.sha;
-
-    // Get the tree SHA of the latest commit
-    const { data: commitData } = await octokit.git.getCommit({
-      owner,
-      repo,
-      commit_sha: mainCommitSha,
-    });
-
-    const treeSha = commitData.tree.sha;
-
-    // Create a new branch
     await octokit.git.createRef({
       owner,
       repo,
       ref: `refs/heads/${INITIALE_BRANCH_NAME}`,
-      sha: mainCommitSha,
+      sha: refData.object.sha,
     });
 
-    // 3. Create a new blob for the copied content
-    const { data: newBlob } = await octokit.git.createBlob({
+    const baseFilePath = await findFluentResourceFile(
+      app,
+      octokit,
       owner,
+      repo
+    );
+
+    if (baseFilePath) {
+      app.log.info(
+        `Found FluentResource file at ${baseFilePath} in ${owner}/${repo}`
+      );
+    } else {
+      app.log.info(`No FluentResource file found in ${owner}/${repo}`);
+    }
+
+    // Create the configuration file in the new branch
+    await octokit.repos.createOrUpdateFileContents({
+      owner: owner,
       repo,
-      content: baseFileContent.data.content,
-      encoding: "base64",
+      path: CONFIG_FILE_PATH,
+      message: commitMessage,
+      content: defaultConfigYaml(baseFilePath, "base64"),
+      branch: INITIALE_BRANCH_NAME,
     });
 
-    // 4. Create a new tree with the updated de.ts file
-    const { data: newTree } = await octokit.git.createTree({
-      owner,
-      repo,
-      base_tree: treeSha,
-      tree: [
-        {
-          path: path.join(path.dirname(baseFilePath), "de.ts"),
-          mode: "100644",
-          type: "blob",
-          sha: newBlob.sha,
-        },
-      ],
-    });
-
-    // 5. Create a new commit with the new tree
-    const { data: newCommit } = await octokit.git.createCommit({
-      owner,
-      repo,
-      message: "Copy content from en.json to de.json for first translation",
-      tree: newTree.sha,
-      parents: [mainCommitSha],
-    });
-
-    // 6. Update the branch reference to point to the new commit
-    await octokit.git.updateRef({
-      owner,
-      repo,
-      ref: `heads/${INITIALE_BRANCH_NAME}`,
-      sha: newCommit.sha,
-    });
-
-    // 7. Create a pull request from the new branch to the main branch
+    // Create a Pull Request to merge the new configuration
     await octokit.pulls.create({
       owner,
       repo,
-      title: "First translation for DE",
+      title: "Add default configuration file",
       head: INITIALE_BRANCH_NAME,
-      base: MAIN_BRANCH,
-      body: "This PR copies the content of en.json to de.json as the first step of the translation process.",
+      base: defaultBranch,
+      body:
+        "This PR adds a default configuration file for Colour AI\n" +
+        "Make sure to update 'defaultPath' and 'languages' according to your needs.",
     });
+
+    app.log.info(`PR created successfully in ${owner}/${repo}`);
   } catch (error) {
-    app.log.error(error as Error);
-    throw error;
+    const errorMessage = error instanceof Error ? error.message : error;
+    app.log.error(`Failed to create PR in ${owner}/${repo}: ${errorMessage}`);
   }
 };
