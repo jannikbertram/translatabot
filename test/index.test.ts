@@ -3,10 +3,12 @@
 
 import nock from "nock";
 // Requiring our app implementation
-import myProbotApp, { INITIALE_BRANCH_NAME, MAIN_BRANCH } from "../src";
+import myProbotApp from "../src";
 import { Probot, ProbotOctokit } from "probot";
 // Requiring our fixtures
 import payload from "./fixtures/issues.opened.json";
+import { MAIN_BRANCH } from "../src/translation/translation";
+import { INITIAL_BRANCH_NAME } from "../src/setup/installation.created";
 
 const TEST_REPO = "hiimbex/testing-things";
 
@@ -67,7 +69,7 @@ describe("My Probot app", () => {
     nock("https://api.github.com")
       .post(`/repos/${TEST_REPO}/git/refs`)
       .reply(200, {
-        ref: `refs/heads/${INITIALE_BRANCH_NAME}`,
+        ref: `refs/heads/${INITIAL_BRANCH_NAME}`,
         sha: "new-branch-sha",
       });
 
@@ -90,7 +92,7 @@ describe("My Probot app", () => {
     nock("https://api.github.com")
       .patch(
         `/repos/${TEST_REPO}/git/refs/${encodeURIComponent(
-          "heads/" + INITIALE_BRANCH_NAME
+          "heads/" + INITIAL_BRANCH_NAME
         )}`
       )
       .reply(200);

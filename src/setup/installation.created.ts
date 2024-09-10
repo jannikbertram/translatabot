@@ -1,10 +1,10 @@
 import { Probot, ProbotOctokit } from "probot";
-import { getDefaultBranch } from "./github.utils";
-import { defaultConfigYaml } from "./config/defaultConfig";
+import { getDefaultBranch } from "../github/github";
+import { defaultConfigYaml } from "../config/config";
 import { findFluentResourceFile } from "./translation_file_finder";
 
-export const INITIALE_BRANCH_NAME = "colour-ai-config-2";
-const CONFIG_FILE_PATH = ".github/colour-ai-config.yml";
+export const INITIAL_BRANCH_NAME = "colour-ai-config-2";
+export const CONFIG_FILE_PATH = ".github/translatabot.yml";
 
 export const createInitialPR = async (
   app: Probot,
@@ -27,7 +27,7 @@ export const createInitialPR = async (
     await octokit.git.createRef({
       owner,
       repo,
-      ref: `refs/heads/${INITIALE_BRANCH_NAME}`,
+      ref: `refs/heads/${INITIAL_BRANCH_NAME}`,
       sha: refData.object.sha,
     });
 
@@ -53,7 +53,7 @@ export const createInitialPR = async (
       path: CONFIG_FILE_PATH,
       message: commitMessage,
       content: defaultConfigYaml(baseFilePath, "base64"),
-      branch: INITIALE_BRANCH_NAME,
+      branch: INITIAL_BRANCH_NAME,
     });
 
     // Create a Pull Request to merge the new configuration
@@ -61,7 +61,7 @@ export const createInitialPR = async (
       owner,
       repo,
       title: "Add default configuration file",
-      head: INITIALE_BRANCH_NAME,
+      head: INITIAL_BRANCH_NAME,
       base: defaultBranch,
       body:
         "This PR adds a default configuration file for Colour AI\n" +

@@ -1,6 +1,8 @@
 import { Probot } from "probot";
 
-import { createInitialPR } from "./installation.created";
+import { createInitialPR } from "./setup/installation.created";
+import { createTranslationPR } from "./translation/translation";
+import { getConfig } from "./config/config";
 
 export const App = (app: Probot) => {
   app.on("installation.created", async (context) => {
@@ -14,17 +16,32 @@ export const App = (app: Probot) => {
     }
   });
 
-  app.on("issues.opened", async (context) => {
-    const issueComment = context.issue({
-      body: "Thanks for opening this issue!",
-    });
-    await context.octokit.issues.createComment(issueComment);
-  });
-  // For more information on building apps:
-  // https://probot.github.io/docs/
+  app.on("pull_request.closed", async (context) => {
+    // only consider merged pull requests
+    if (!context.payload.pull_request.merged) return;
 
-  // To get your app running against GitHub, see:
-  // https://probot.github.io/docs/development/
+    const repo = context.payload.repository;
+    const owner = repo.full_name.split("/")[0];
+    const repoName = repo.full_name.split("/")[1];
+
+    const prBaseBranch = context.payload.pull_request.base.ref;
+    const config = await getConfig(
+      context.octokit,
+      owner,
+      repoName,
+      prBaseBranch
+    );
+
+    await createTranslationPR({
+      app,
+      octokit: context.octokit,
+      config,
+      owner,
+      repo: repoName,
+      prNumber: context.payload.pull_request.number,
+      baseBranch: context.payload.pull_request.base.ref,
+    });
+  });
 };
 
 export default App;
