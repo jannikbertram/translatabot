@@ -2,7 +2,7 @@ import { Probot, ProbotOctokit } from "probot";
 import { AppConfigFile, TargetLanguage } from "../config/config";
 import { CONFIG_FILE_PATH } from "../setup/installation.created";
 import { getFileContent } from "../github/github";
-import { resolve } from "path";
+import { dirname, join } from "path";
 import { fullLanguageTranslationPR } from "./fullTranslation";
 import { partialTranslationUpdatePR } from "./partialTranslation";
 
@@ -49,7 +49,7 @@ export const createTranslationPR = async ({
     for (const language of config.languages) {
       const languageFile = await getFileContent(
         octokit,
-        resolve(config.defaultPath, language.relativePath),
+        join(dirname(config.defaultPath), language.relativePath),
         owner,
         repo,
         { ref: baseBranch }
@@ -67,7 +67,7 @@ export const createTranslationPR = async ({
 
     for (const newLanguage of newLanguages) {
       app.log.info(
-        `New language found in new config from PR #${prNumber} for ${owner}/${repo}`
+        `New language found in config update from PR #${prNumber} for ${owner}/${repo}`
       );
       await fullLanguageTranslationPR({
         app,

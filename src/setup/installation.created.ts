@@ -1,9 +1,9 @@
 import { Probot, ProbotOctokit } from "probot";
 import { getDefaultBranch } from "../github/github";
-import { defaultConfigYaml } from "../config/config";
+import { APP_NAME, defaultConfigYaml } from "../config/config";
 import { findFluentResourceFile } from "./translation_file_finder";
 
-export const INITIAL_BRANCH_NAME = "colour-ai-config-2";
+export const INITIAL_BRANCH_NAME = `${APP_NAME}/config`;
 export const CONFIG_FILE_PATH = ".github/translatabot.yml";
 
 export const createInitialPR = async (
@@ -12,7 +12,7 @@ export const createInitialPR = async (
   owner: string,
   repo: string
 ) => {
-  const commitMessage = "Add Colour AI configuration";
+  const commitMessage = `Add ${APP_NAME} configuration file`;
 
   try {
     const defaultBranch = await getDefaultBranch(octokit, owner, repo);
@@ -64,7 +64,7 @@ export const createInitialPR = async (
       head: INITIAL_BRANCH_NAME,
       base: defaultBranch,
       body:
-        "This PR adds a default configuration file for Colour AI\n" +
+        "This PR adds a default configuration file for Translatabot\n" +
         "Make sure to update 'defaultPath' and 'languages' according to your needs.",
     });
 

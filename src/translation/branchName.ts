@@ -21,7 +21,7 @@ export const generateBranchName = async ({
   commitHashShort,
 }: GenerateBranchNameProps): Promise<string> => {
   const defaultBranchName = `${APP_NAME}/${
-    language ?? PARTIAL_UPDATE_BRANCH_LABEL
+    language?.toLowerCase() ?? PARTIAL_UPDATE_BRANCH_LABEL
   }/${commitHashShort}`;
 
   const branchExists = await checkBranchExists(

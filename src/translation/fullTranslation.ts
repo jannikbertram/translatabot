@@ -1,6 +1,6 @@
 import { Gemini } from "../gemini/gemini";
 import { Probot, ProbotOctokit } from "probot";
-import path, { resolve } from "path";
+import { dirname, join } from "path";
 import { AppConfigFile, TargetLanguage } from "../config/config";
 import { getDefaultBranch, getFileContent } from "../github/github";
 import { generateBranchName } from "./branchName";
@@ -97,10 +97,7 @@ export const fullLanguageTranslationPR = async ({
       base_tree: treeSha,
       tree: [
         {
-          path: resolve(
-            path.dirname(config.defaultPath),
-            language.relativePath
-          ),
+          path: join(dirname(config.defaultPath), language.relativePath),
           mode: "100644",
           type: "blob",
           sha: newBlob.sha,

@@ -24,22 +24,24 @@ export class Gemini {
 
   async translateFull(
     content: string,
-    targetLanguage: string
+    targetLanguage: string,
+    encoding: "utf8" | "base64" = "base64"
   ): Promise<string> {
     const prompt = fullTranslateFilePrompt(content, targetLanguage);
 
     const generatedContent = await this.model.generateContent(prompt);
-    return generatedContent.response.text();
+    return Buffer.from(generatedContent.response.text()).toString(encoding);
   }
 
   async translatePartial(
     translationFileContent: string,
     changesToBaseTranslation: string,
-    targetLanguage: string
+    targetLanguage: string,
+    encoding: "utf8" | "base64" = "base64"
   ): Promise<string> {
     const translationFileLines = translationFileContent.split("\n");
     const translationFileWithLineNumber = translationFileLines
-      .map((line, index) => `${index + 1}#${line}`)
+      .map((line, index) => `${index + 1}: ${line}`)
       .join("\n");
 
     const prompt = partialTranslateFilePrompt(
@@ -49,13 +51,16 @@ export class Gemini {
     );
 
     const generatedContent = await this.model.generateContent(prompt);
+    const response = generatedContent.response.text();
+
+    const responseLines = response.split("\n");
     const fileUpdates = JSON.parse(
-      generatedContent.response.text()
+      responseLines.slice(1, -1).join("\n")
     ) as FileChange[];
 
-    return this.applyChangesToFile(translationFileLines, fileUpdates).join(
-      "\n"
-    );
+    return Buffer.from(
+      this.applyChangesToFile(translationFileLines, fileUpdates).join("\n")
+    ).toString(encoding);
   }
 
   /*

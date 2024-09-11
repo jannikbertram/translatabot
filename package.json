@@ -1,5 +1,5 @@
 {
-  "name": "colour",
+  "name": "translatabot",
   "version": "1.0.0",
   "private": true,
   "description": "A Probot app",
@@ -13,7 +13,7 @@
   ],
   "scripts": {
     "build": "tsc",
-    "start": "probot run ./lib/index.js",
+    "start": "probot run ./lib/src/index.js",
     "test": "jest"
   },
   "dependencies": {

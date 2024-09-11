@@ -21,12 +21,14 @@ export const partialTranslateFilePrompt = (
 ) => {
   return (
     INSTRUCTIONS +
-    `Translate the changes of the Github patch into ${targetLanguage}.\n` +
+    "Apply the changes of the Github patch into the current file.\n" +
+    "The Github patch represents changes to the base translation file\n" +
+    `Those changes must be translated to ${targetLanguage} and applied to the target translation file.\n` +
+    `Github patch:\n${partialChanges}\n\n` +
+    `Target translation file content:\n\n${targetLanguageCurrentContent}\n\n` +
     "The output MUST be valid JSON.\n" +
     "The output MUST be list of line changes to the file.\n" +
     "The schema of a line change is as follows:\n" +
-    "{ line: number, action: 'add' | 'remove' | 'replace', content?: string }\n" +
-    `Current file content:\n${targetLanguageCurrentContent}\n` +
-    `Github patch:\n${partialChanges}\n`
+    "{ line: number, action: 'add' | 'remove' | 'replace', content?: string }\n"
   );
 };

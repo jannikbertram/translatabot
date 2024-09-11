@@ -1,6 +1,6 @@
 import { Gemini } from "../gemini/gemini";
 import { Probot, ProbotOctokit } from "probot";
-import path, { resolve } from "path";
+import { dirname, join } from "path";
 import { APP_NAME, AppConfigFile } from "../config/config";
 import { getDefaultBranch, getFileContent } from "../github/github";
 import { generateBranchName } from "./branchName";
@@ -31,25 +31,30 @@ export const partialTranslationUpdatePR = async ({
   try {
     const baseBranchOrDefault =
       baseBranch ?? (await getDefaultBranch(octokit, owner, repo));
-    const translationFileContent = await getFileContent(
-      octokit,
-      defaultFileChanges,
-      owner,
-      repo,
-      { ref: baseBranchOrDefault }
-    );
-
-    if (!translationFileContent) {
-      app.log.error(
-        `Base file ${defaultFileChanges} not found in ${owner}/${repo}`
-      );
-      return;
-    }
 
     const GeminiModel = new Gemini();
-
     const blobPerLanguage = await Promise.all(
-      config.languages.map(async ({ language }) => {
+      config.languages.map(async ({ language, relativePath }) => {
+        const translationFilePath = join(
+          dirname(config.defaultPath),
+          relativePath
+        );
+
+        const translationFileContent = await getFileContent(
+          octokit,
+          translationFilePath,
+          owner,
+          repo,
+          { ref: baseBranchOrDefault }
+        );
+
+        if (!translationFileContent) {
+          app.log.error(
+            `Translation file ${translationFilePath} not found in ${owner}/${repo}`
+          );
+          return;
+        }
+
         const content = await GeminiModel.translatePartial(
           translationFileContent,
           defaultFileChanges,
@@ -105,14 +110,14 @@ export const partialTranslationUpdatePR = async ({
       owner,
       repo,
       base_tree: treeSha,
-      tree: blobPerLanguage.map((blob, index) => ({
-        path: resolve(
-          path.dirname(config.defaultPath),
+      tree: blobPerLanguage.filter(Boolean).map((blob, index) => ({
+        path: join(
+          dirname(config.defaultPath),
           config.languages[index].relativePath
         ),
         mode: "100644",
         type: "blob",
-        sha: blob.sha,
+        sha: blob?.sha,
       })),
     });
 

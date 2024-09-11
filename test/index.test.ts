@@ -5,10 +5,10 @@ import nock from "nock";
 // Requiring our app implementation
 import myProbotApp from "../src";
 import { Probot, ProbotOctokit } from "probot";
-// Requiring our fixtures
-import payload from "./fixtures/issues.opened.json";
-import { MAIN_BRANCH } from "../src/translation/translation";
+import payload from "./fixtures/installation.created.json";
+
 import { INITIAL_BRANCH_NAME } from "../src/setup/installation.created";
+const MAIN_BRANCH = "main";
 
 const TEST_REPO = "hiimbex/testing-things";
 

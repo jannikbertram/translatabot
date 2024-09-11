@@ -4,6 +4,11 @@ import { CONFIG_FILE_PATH } from "../setup/installation.created";
 import { ProbotOctokit } from "probot";
 
 export const APP_NAME = "translatabot";
+export const DEFAULT_PATH_COMMENT = " Path to the default translation file";
+export const RELATIVE_PATH_COMMENT =
+  " Relative path to the auto-translated file";
+export const LANGUAGE_COMMENT =
+  " English name of the language to be translated to.";
 
 export type TargetLanguage = {
   relativePath: string;
@@ -31,29 +36,29 @@ const defaultConfig = (defaultPath: string, languages: TargetLanguage[]) => ({
 
 export const defaultConfigYaml = (
   defaultPath: string | undefined,
-  encoding: "base64" | "utf-8" = "utf-8"
+  encoding: "base64" | "utf8" = "utf8"
 ) => {
   const config = defaultConfig(defaultPath ?? fallbackDefaultPath, [
     { relativePath: "de.ts", language: "German" },
   ]);
   const yaml = new YamlDocument(config);
-  const defaultPathObj = yaml.get("defaultPath") as YamlNode;
+  const defaultPathObj = yaml.get("defaultPath", true) as YamlNode;
   if (defaultPathObj) {
-    defaultPathObj.commentBefore = "Path to the default translation file";
+    defaultPathObj.comment = DEFAULT_PATH_COMMENT;
   }
-  const firstRelativePathObj = yaml.getIn([
-    "languages",
-    0,
-    "relativePath",
-  ]) as YamlNode;
+  const firstRelativePathObj = yaml.getIn(
+    ["languages", 0, "relativePath"],
+    true
+  ) as YamlNode;
   if (firstRelativePathObj) {
-    firstRelativePathObj.commentBefore =
-      "Relative path to the auto-translated file. Make sure the file path matches the original file.";
+    firstRelativePathObj.comment = RELATIVE_PATH_COMMENT;
   }
-  const firstLanguageObj = yaml.getIn(["languages", 0, "language"]) as YamlNode;
+  const firstLanguageObj = yaml.getIn(
+    ["languages", 0, "language"],
+    true
+  ) as YamlNode;
   if (firstLanguageObj) {
-    firstLanguageObj.commentBefore =
-      "English name of the language to be translated to.";
+    firstLanguageObj.comment = LANGUAGE_COMMENT;
   }
 
   return Buffer.from(yaml.toString()).toString(encoding);
