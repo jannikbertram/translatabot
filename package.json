@@ -22,7 +22,7 @@
     "@sentry/profiling-node": "^8.30.0",
     "date-fns": "^3.6.0",
     "probot": "^12.2.4",
-    "yaml": "^2.5.0"
+    "yaml": "^2.5.1"
   },
   "devDependencies": {
     "@types/jest": "^29.0.0",
