@@ -1,8 +1,12 @@
+import "./instrument"; // setup Sentry
+
 import { Probot } from "probot";
 
+import * as Sentry from "@sentry/node";
+
+import { getConfig } from "./config/config";
 import { createInitialPR } from "./setup/installation.created";
 import { createTranslationPR } from "./translation/translation";
-import { getConfig } from "./config/config";
 
 export const App = (app: Probot) => {
   app.on("installation.created", async (context) => {
@@ -12,7 +16,16 @@ export const App = (app: Probot) => {
       const owner = repo.full_name.split("/")[0];
       const repoName = repo.full_name.split("/")[1];
 
-      await createInitialPR(app, context.octokit, owner, repoName);
+      Sentry.setUser({ id: repo.full_name, username: repo.full_name });
+      Sentry.setContext("installation.created", { owner, repo: repoName });
+
+      try {
+        await createInitialPR(app, context.octokit, owner, repoName);
+      } catch (error) {
+        // don't throw an error here to allow other installations to go through
+        app.log.error(error as Error);
+        Sentry.captureException(error);
+      }
     }
   });
 
@@ -21,9 +34,12 @@ export const App = (app: Probot) => {
     if (!context.payload.pull_request.merged) return;
 
     const repo = context.payload.repository;
+
     const owner = repo.full_name.split("/")[0];
     const repoName = repo.full_name.split("/")[1];
 
+    Sentry.setUser({ id: repo.full_name, username: repo.full_name });
+    Sentry.setContext("pull_request.closed", { owner, repo: repoName });
     const prBaseBranch = context.payload.pull_request.base.ref;
     const config = await getConfig(
       context.octokit,
@@ -39,8 +55,14 @@ export const App = (app: Probot) => {
       owner,
       repo: repoName,
       prNumber: context.payload.pull_request.number,
+      prTitle: context.payload.pull_request.title,
       baseBranch: context.payload.pull_request.base.ref,
     });
+  });
+
+  app.onError((error) => {
+    app.log.error(error as Error);
+    Sentry.captureException(error);
   });
 };
 

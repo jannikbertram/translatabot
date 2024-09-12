@@ -1,7 +1,8 @@
-import { parse as yamlParse, Document as YamlDocument } from "yaml";
+import { ProbotOctokit } from "probot";
+import { Document as YamlDocument, parse as yamlParse } from "yaml";
+
 import { getFileContent } from "../github/github";
 import { CONFIG_FILE_PATH } from "../setup/installation.created";
-import { ProbotOctokit } from "probot";
 
 export const APP_NAME = "translatabot";
 export const DEFAULT_PATH_COMMENT = " Path to the default translation file";
@@ -85,5 +86,17 @@ export const getConfig = async (
     throw new Error("Config file not found");
   }
 
-  return yamlParse(configFileContent) as AppConfigFile;
+  return verifyConfig(yamlParse(configFileContent));
+};
+
+const verifyConfig = (config: AppConfigFile): AppConfigFile => {
+  if (!config?.defaultPath) {
+    throw new Error("No default path found in config");
+  }
+
+  if (!config.languages || config.languages.length === 0) {
+    throw new Error("No languages found in config");
+  }
+
+  return config;
 };

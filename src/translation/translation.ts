@@ -1,8 +1,9 @@
-import { Probot, ProbotOctokit } from "probot";
-import { AppConfigFile, TargetLanguage } from "../config/config";
-import { CONFIG_FILE_PATH } from "../setup/installation.created";
-import { getFileContent } from "../github/github";
 import { dirname, join } from "path";
+import { Probot, ProbotOctokit } from "probot";
+
+import { AppConfigFile, TargetLanguage } from "../config/config";
+import { getFileContent } from "../github/github";
+import { CONFIG_FILE_PATH } from "../setup/installation.created";
 import { fullLanguageTranslationPR } from "./fullTranslation";
 import { partialTranslationUpdatePR } from "./partialTranslation";
 
@@ -14,6 +15,7 @@ type PullRequestProps = {
   repo: string;
   prNumber: number;
   baseBranch: string;
+  prTitle?: string;
 };
 
 export const createTranslationPR = async ({
@@ -23,8 +25,10 @@ export const createTranslationPR = async ({
   owner,
   repo,
   prNumber,
+  prTitle,
   baseBranch,
 }: PullRequestProps) => {
+  const logPrefix = `[${owner}/${repo}]`;
   const { hasConfigChanged, hasTranslationChanged, translationChanges } =
     await getRelevantPRChanges(
       octokit,
@@ -37,13 +41,15 @@ export const createTranslationPR = async ({
 
   if (!hasConfigChanged && !hasTranslationChanged) {
     app.log.info(
-      `No relevant changes in PR #${prNumber} for ${owner}/${repo}. Skipping...`
+      `${logPrefix} No relevant changes in PR #${prNumber}. Skipping...`
     );
     return;
   }
 
   if (hasConfigChanged) {
-    app.log.info(`Configuration file has changed in PR #${prNumber}`);
+    app.log.info(
+      `${logPrefix} Configuration file has changed in PR #${prNumber}`
+    );
 
     const newLanguages: TargetLanguage[] = [];
     for (const language of config.languages) {
@@ -61,13 +67,13 @@ export const createTranslationPR = async ({
 
     if (newLanguages.length === 0) {
       app.log.info(
-        `No new languages found in new config from PR #${prNumber} for ${owner}/${repo}`
+        `${logPrefix} No new languages found in new config from PR #${prNumber}`
       );
     }
 
     for (const newLanguage of newLanguages) {
       app.log.info(
-        `New language found in config update from PR #${prNumber} for ${owner}/${repo}`
+        `${logPrefix} New language found in config update from PR #${prNumber}`
       );
       await fullLanguageTranslationPR({
         app,
@@ -78,12 +84,15 @@ export const createTranslationPR = async ({
         language: newLanguage,
         baseBranch,
       });
+      app.log.info(
+        `${logPrefix} Created PR for language '${newLanguage.language}'`
+      );
     }
   }
 
   if (!hasTranslationChanged || !translationChanges) return;
 
-  app.log.info(`Translation file has changed in PR #${prNumber}`);
+  app.log.info(`${logPrefix} Translation file has changed in PR #${prNumber}`);
   await partialTranslationUpdatePR({
     app,
     octokit,
@@ -92,8 +101,12 @@ export const createTranslationPR = async ({
     repo,
     defaultFileChanges: translationChanges,
     prNumber,
+    prTitle,
     baseBranch,
   });
+  app.log.info(
+    `${logPrefix} Created PR for partial translation update of ${config.languages.length} languages`
+  );
 };
 
 const getRelevantPRChanges = async (
