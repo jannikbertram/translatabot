@@ -1,18 +1,15 @@
-// You can import your modules
-// import index from '../src/index'
-
 import nock from "nock";
-// Requiring our app implementation
-import myProbotApp from "../src";
 import { Probot, ProbotOctokit } from "probot";
+
+import { App } from "../src";
+import { INITIAL_BRANCH_NAME } from "../src/setup/installation.created";
 import payload from "./fixtures/installation.created.json";
 
-import { INITIAL_BRANCH_NAME } from "../src/setup/installation.created";
 const MAIN_BRANCH = "main";
 
-const TEST_REPO = "hiimbex/testing-things";
+const TEST_REPO = "jannikbertram/translatable-project";
 
-describe("My Probot app", () => {
+describe("Translatabot tests", () => {
   let probot: any;
 
   beforeEach(() => {
@@ -28,24 +25,31 @@ describe("My Probot app", () => {
         };
       }),
     });
-    myProbotApp(probot);
+    App(probot);
   });
 
   test("handles installation.created event and creates a pull request", async () => {
     const baseFilePath = "path/to/en.json";
+    const configFilePath = ".github/translatabot.yml";
+
+    // Mock the API call to get the default branch
+    nock("https://api.github.com")
+      .persist()
+      .get(`/repos/${TEST_REPO}`)
+      .reply(200, { default_branch: MAIN_BRANCH });
 
     // Mock the API call to get the content of the base file
     nock("https://api.github.com")
-      .get(`/search/code?q=new%20FluentResource`)
+      .get("/search/code")
+      .query(true)
       .reply(200, {
         items: [{ name: "en.json", path: baseFilePath }],
       });
 
-    // Mock the API call to search for the FluentResource file
+    // Mock the API call to get the content of the base file
     nock("https://api.github.com")
-      .get(`/repos/${TEST_REPO}/contents/${encodeURIComponent(baseFilePath)}`)
-      .query(true)
-      .reply(200, [{ path: baseFilePath }]);
+      .put(`/repos/${TEST_REPO}/contents/${encodeURIComponent(configFilePath)}`)
+      .reply(200);
 
     // Mock the API call to get the latest commit SHA of the main branch
     nock("https://api.github.com")
@@ -58,13 +62,6 @@ describe("My Probot app", () => {
         object: { sha: "main-branch-sha" },
       });
 
-    // Mock the API call to get the tree SHA of the latest commit
-    nock("https://api.github.com")
-      .get(`/repos/${TEST_REPO}/git/commits/main-branch-sha`)
-      .reply(200, {
-        tree: { sha: "tree-sha" },
-      });
-
     // Mock the API call to create a new branch
     nock("https://api.github.com")
       .post(`/repos/${TEST_REPO}/git/refs`)
@@ -72,30 +69,6 @@ describe("My Probot app", () => {
         ref: `refs/heads/${INITIAL_BRANCH_NAME}`,
         sha: "new-branch-sha",
       });
-
-    // Mock the API call to create a new blob
-    nock("https://api.github.com")
-      .post(`/repos/${TEST_REPO}/git/blobs`)
-      .reply(200, { sha: "new-blob-sha" });
-
-    // Mock the API call to create a new tree
-    nock("https://api.github.com")
-      .post(`/repos/${TEST_REPO}/git/trees`)
-      .reply(200, { sha: "new-tree-sha" });
-
-    // Mock the API call to create a new commit
-    nock("https://api.github.com")
-      .post(`/repos/${TEST_REPO}/git/commits`)
-      .reply(200, { sha: "new-commit-sha" });
-
-    // Mock the API call to update the branch reference
-    nock("https://api.github.com")
-      .patch(
-        `/repos/${TEST_REPO}/git/refs/${encodeURIComponent(
-          "heads/" + INITIAL_BRANCH_NAME
-        )}`
-      )
-      .reply(200);
 
     // Mock the API call to create a pull request
     nock("https://api.github.com")
@@ -105,7 +78,10 @@ describe("My Probot app", () => {
     // Trigger the event
     await probot.receive({ name: "installation.created", payload });
 
-    console.log(nock.pendingMocks());
+    const pendingMocks = nock.pendingMocks();
+    if (pendingMocks.length > 0) {
+      console.log(nock.pendingMocks());
+    }
     // Ensure all nocks were called
     expect(nock.isDone()).toBe(true);
   });
