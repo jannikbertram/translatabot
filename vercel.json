@@ -1,0 +1,30 @@
+{
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/node",
+      "config": {
+        "distDir": "lib"
+      }
+    },
+    {
+      "src": "website/**",
+      "use": "@vercel/static-build",
+      "config": {
+        "buildCommand": "hugo",
+        "outputDirectory": "website/public"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/website/$1",
+      "continue": true
+    },
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
+    }
+  ]
+}
