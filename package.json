@@ -17,7 +17,7 @@
     "test": "ENV=test jest"
   },
   "dependencies": {
-    "@google/generative-ai": "^0.18.0",
+    "@google/generative-ai": "^0.20.0",
     "@sentry/node": "^8.30.0",
     "@sentry/profiling-node": "^8.30.0",
     "date-fns": "^3.6.0",
