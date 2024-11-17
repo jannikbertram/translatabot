@@ -1,4 +1,35 @@
-baseURL = 'https://example.org/'
-languageCode = 'en-us'
-title = 'My New Hugo Site'
-theme = 'docsy'
+baseURL = "https://yourdomain.com/"
+languageCode = "en-us"
+title = "Translatabot"
+theme = "ananke"
+enableRobotsTXT = true
+
+[params]
+  description = "Official site for Translatabot, the GitHub app that simplifies translations."
+  author = "Your Name"
+  tagline = "Streamline your translation workflows with ease."
+
+[menu]
+  [[menu.main]]
+    identifier = "home"
+    name = "Home"
+    url = "/"
+    weight = 1
+
+  [[menu.main]]
+    identifier = "about"
+    name = "About"
+    url = "/about/"
+    weight = 2
+
+  [[menu.main]]
+    identifier = "features"
+    name = "Features"
+    url = "/features/"
+    weight = 3
+
+  [[menu.main]]
+    identifier = "contact"
+    name = "Contact"
+    url = "/contact/"
+    weight = 4
