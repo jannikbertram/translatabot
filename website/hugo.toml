@@ -1,12 +1,12 @@
 baseURL = "https://translatabot-website.vercel.app/"
 languageCode = "en-us"
 title = "Translatabot"
-theme = ["github.com/theNewDynamic/gohugo-theme-ananke"]
 enableRobotsTXT = true
+theme = ["github.com/theNewDynamic/gohugo-theme-ananke/v2"]
 
 [params]
   description = "Official site for Translatabot, the GitHub app that simplifies translations."
-  author = "Your Name"
+  author = "Jannik Bertram"
   tagline = "Streamline your translation workflows with ease."
 
 [menu]
