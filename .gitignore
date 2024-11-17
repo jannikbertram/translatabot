@@ -6,4 +6,6 @@ npm-debug.log
 coverage
 lib
 .vscode/
+.DS_Store
 website/public
+website/.DS_Store
