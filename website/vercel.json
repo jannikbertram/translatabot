@@ -1,0 +1,10 @@
+{
+  "build": {
+    "env": {
+      "HUGO_VERSION": "0.134.2"
+    }
+  },
+  "framework": "hugo",
+  "buildCommand": "PATH=$PATH:/usr/local/go/bin && hugo --gc",
+  "installCommand": "dnf install tar && curl -OL https://go.dev/dl/go1.22.9.linux-amd64.tar.gz && tar -C /usr/local -xzf go1.22.9.linux-amd64.tar.gz"
+}
