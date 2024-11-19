@@ -1,7 +1,7 @@
 baseURL = "https://yourdomain.com/"
 languageCode = "en-us"
 title = "Translatabot"
-theme = "ananke"
+theme = ["github.com/theNewDynamic/gohugo-theme-ananke/v2"]
 enableRobotsTXT = true
 
 [params]
