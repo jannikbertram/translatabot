@@ -1,7 +1,0 @@
-{
-  "framework": "hugo",
-  "projectSettings": {
-    "buildCommand": "hugo --gc",
-    "installCommand": "apt-get install -y golang"
-  }
-}
