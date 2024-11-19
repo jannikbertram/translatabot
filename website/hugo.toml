@@ -1,4 +1,4 @@
-baseURL = "https://yourdomain.com/"
+baseURL = "https://translatabot-website.vercel.app/"
 languageCode = "en-us"
 title = "Translatabot"
 theme = ["github.com/theNewDynamic/gohugo-theme-ananke/v2"]
