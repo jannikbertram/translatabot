@@ -42,10 +42,16 @@ languages:
     language: German # English name of the language to be translated to.
 ```
 
-## Supported Localization Frameworks
+## Tested Localization Frameworks
+
+Translatabot can in theory be used with any localization framework in any programming lanuage. Some frameworks may not work because of different file structures. These are the tested localization frameworks:
 
 - [Fluent](https://projectfluent.org/)
 - More to come...
+
+## How it works
+
+The translations are provided by Google Gemini. In the future, more AI models should be supported and the users shall be able to choose. Gemini is currently chosen since it's free and allows this service to remain free for use.
 
 ## Beta Status
 
