@@ -1,6 +1,6 @@
 # Translatabot
 
-Translatabot is a GitHub app designed to automatically keep your localization files updated. By monitoring changes to your default translation file, Translatabot ensures that all your localization files stay in sync by creating automated pull requests (PRs) for updates. This saves you time and effort, so you can focus on building great software.
+Translatabot is a GitHub app designed to automatically keep your localization files updated. By monitoring changes to your default translation file (e.g. `en.json`, or `en_GB.ts`), Translatabot ensures that all your localization files stay in sync by creating automated pull requests (PRs) for updates. This saves you time and effort, so you can focus on building great software.
 
 ## Features
 
