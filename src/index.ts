@@ -60,6 +60,11 @@ export const App = (app: Probot) => {
     });
   });
 
+  app.on("marketplace_purchase", async (context) => {
+    app.log.info("Marketplace purchase event received", context.payload);
+    return true;
+  });
+
   app.onError((error) => {
     app.log.error(error as Error);
     Sentry.captureException(error);
