@@ -15,7 +15,7 @@ Follow these steps to set up Translatabot in your repository:
 
 ### 1. Install Translatabot
 
-Visit [Translatabot's GitHub App page](#) and install it on your desired repository.
+Visit [Translatabot's GitHub App page](https://github.com/apps/translatabotai) and install it on your desired repository.
 
 ### 2. Create the Default Configuration
 
