@@ -1,39 +1,75 @@
-## Contributing
+# Contributions Guide
 
-[fork]: /fork
-[pr]: /compare
-[code-of-conduct]: CODE_OF_CONDUCT.md
+We welcome contributions of all types to make Translatabot better for everyone! Whether you're fixing bugs, suggesting new features, improving documentation, or sharing feedback, your input is valuable.
 
-Hi there! We're thrilled that you'd like to contribute to this project. Your help is essential for keeping it great.
+## How to Contribute
 
-Please note that this project is released with a [Contributor Code of Conduct][code-of-conduct]. By participating in this project you agree to abide by its terms.
+### 1. Report Issues
 
-## Issues and PRs
+- Found a bug? Have a feature request? Open an issue on GitHub.
+- Clearly describe the problem or suggestion, including steps to reproduce if applicable.
 
-If you have suggestions for how this project could be improved, or want to report a bug, open an issue! We'd love all and any contributions. If you have questions, too, we'd love to hear them.
+### 2. Suggest Features
 
-We'd also love PRs. If you're thinking of a large PR, we advise opening up an issue first to talk about it, though! Look at the links below if you're not sure how to open a PR.
+- Share your ideas for new features or improvements by opening an issue.
+- Provide as much detail as possible to help us understand your proposal.
 
-## Submitting a pull request
+### 3. Submit Pull Requests
 
-1. [Fork][fork] and clone the repository.
-1. Configure and install the dependencies: `npm install`.
-1. Make sure the tests pass on your machine: `npm test`, note: these tests also apply the linter, so there's no need to lint separately.
-1. Create a new branch: `git checkout -b my-branch-name`.
-1. Make your change, add tests, and make sure the tests still pass.
-1. Push to your fork and [submit a pull request][pr].
-1. Pat your self on the back and wait for your pull request to be reviewed and merged.
+- Fork the repository and create a new branch for your changes.
+- Ensure your code adheres to the existing style and passes all tests.
+- Include a clear and descriptive title for your pull request.
+- Reference any related issues in the pull request description.
 
-Here are a few things you can do that will increase the likelihood of your pull request being accepted:
+### 4. Improve Documentation
 
-- Write and update tests.
-- Keep your changes as focused as possible. If there are multiple changes you would like to make that are not dependent upon each other, consider submitting them as separate pull requests.
-- Write a [good commit message](http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html).
+- Found a typo? Have suggestions to clarify instructions? Contributions to the documentation are always appreciated!
+- Open a pull request with your updates.
 
-Work in Progress pull requests are also welcome to get feedback early on, or if there is something blocked you.
+## Guidelines
 
-## Resources
+1. **Follow the Code of Conduct**  
+   Be respectful and constructive in all interactions.
 
-- [How to Contribute to Open Source](https://opensource.guide/how-to-contribute/)
-- [Using Pull Requests](https://help.github.com/articles/about-pull-requests/)
-- [GitHub Help](https://help.github.com)
+2. **Use Clear Commit Messages**  
+   Write commit messages that explain the purpose of your changes.
+
+3. **Write Tests**  
+   When adding new features or fixing bugs, include tests to ensure the code works as intended.
+
+4. **Keep Changes Small and Focused**  
+   Avoid combining unrelated changes in a single pull request.
+
+## Development Setup
+
+1. Clone the repository:
+
+   ```bash
+   git clone https://github.com/your-repo/translatabot.git
+   ```
+
+2. Install dependencies:
+
+   ```bash
+   npm install
+   ```
+
+3. Run tests:
+
+   ```bash
+   npm test
+   ```
+
+4. Run server:
+
+   ```bash
+   npm start
+   ```
+
+5. Simulate Github event with payload
+
+   ```bash
+   node_modules/.bin/probot receive -e pull_request -p "test/fixtures/partial_update_pull_request.closed.json" lib/src/index.js
+   ```
+
+6. Check [https://probot.github.io/docs/simulating-webhooks/](Probot documentation) for more options to test changes

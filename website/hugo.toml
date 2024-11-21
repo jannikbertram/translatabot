@@ -5,31 +5,35 @@ theme = ["github.com/theNewDynamic/gohugo-theme-ananke/v2"]
 enableRobotsTXT = true
 
 [params]
-  description = "Official site for Translatabot, the GitHub app that simplifies translations."
-  author = "Your Name"
+  description = "Official site for Translatabot, the GitHub app to automate localization."
+  author = "Jannik Bertram"
   tagline = "Streamline your translation workflows with ease."
 
 [menu]
   [[menu.main]]
     identifier = "home"
     name = "Home"
-    url = "/"
+    url = "/#home"
     weight = 1
-
-  [[menu.main]]
-    identifier = "about"
-    name = "About"
-    url = "/about/"
-    weight = 2
 
   [[menu.main]]
     identifier = "features"
     name = "Features"
-    url = "/features/"
-    weight = 3
+    url = "/#features"
+    weight = 2
 
   [[menu.main]]
     identifier = "contact"
     name = "Contact"
-    url = "/contact/"
+    url = "/#contact"
+    weight = 3
+  [[menu.main]]
+    identifier = "privacy-policy"
+    name = "Privacy Policy"
+    url = "/privacy-policy"
     weight = 4
+  [[menu.main]]
+    identifier = "terms-of-service"
+    name = "Terms of Service"
+    url = "/terms-of-service"
+    weight = 5

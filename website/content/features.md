@@ -1,17 +1,6 @@
----
-title: "Features"
----
+# Features
 
-### Key Features of Translatabot
-
-1. **Automated Translation Updates**  
-   Detects changes in your translation files and syncs them across your project.
-
-2. **GitHub Integration**  
-   Works seamlessly with your GitHub repositories for hassle-free translation management.
-
-3. **Custom Rules**  
-   Define custom rules for handling your specific translation workflows.
-
-4. **Detailed Logs**  
-   Keeps track of all actions with detailed logs for better transparency.
+- **Automated Localization Updates:** Monitors your default translation file and creates automated pull requests to update localization files for configured languages.
+- **Supports Multiple Languages:** Easy configuration for as many languages as needed.
+- **Integrates with Popular Localization Frameworks:** Tested with frameworks like [Fluent](https://projectfluent.org/), with more to come.
+- **AI-Powered Translations:** Uses Google Gemini for accurate and efficient translations.
