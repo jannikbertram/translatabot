@@ -7,10 +7,30 @@ import * as Sentry from "@sentry/node";
 import { getConfig } from "./config/config";
 import { createInitialPR } from "./setup/installation.created";
 import { createTranslationPR } from "./translation/translation";
+import { connectToDatabase } from "./db/connection";
+import { upsertInstallation } from "./services/installation.service";
+
+// Connect to database when the app starts
+connectToDatabase().catch((error) => {
+  console.error("Failed to connect to database:", error);
+  Sentry.captureException(error);
+  process.exit(1);
+});
 
 export const App = (app: Probot) => {
   app.on("installation.created", async (context) => {
+    const installation = context.payload.installation;
+
+    // Save installation data
+    await upsertInstallation(installation);
+
+    // Create initial PRs for each repository
     const repos = context.payload.repositories ?? [];
+
+    if (repos.length === 0) {
+      app.log.info(`No repositories found for installation ${installation.id}`);
+      return;
+    }
 
     for (const repo of repos) {
       const owner = repo.full_name.split("/")[0];
@@ -22,7 +42,6 @@ export const App = (app: Probot) => {
       try {
         await createInitialPR(app, context.octokit, owner, repoName);
       } catch (error) {
-        // don't throw an error here to allow other installations to go through
         app.log.error(error as Error);
         Sentry.captureException(error);
       }

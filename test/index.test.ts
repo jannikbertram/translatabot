@@ -3,6 +3,8 @@ import { Probot, ProbotOctokit } from "probot";
 
 import { App } from "../src";
 import { INITIAL_BRANCH_NAME } from "../src/setup/installation.created";
+import { getInstallation } from "../src/services/installation.service";
+import { disconnectFromDatabase } from "../src/db/connection";
 import payload from "./fixtures/installation.created.json";
 
 const MAIN_BRANCH = "main";
@@ -77,26 +79,19 @@ describe("Translatabot tests", () => {
 
     // Trigger the event
     await probot.receive({ name: "installation.created", payload });
-
+    const installation = await getInstallation(payload.installation.id);
     const pendingMocks = nock.pendingMocks();
     if (pendingMocks.length > 0) {
       console.log(nock.pendingMocks());
     }
+    expect(installation).toBeTruthy();
     // Ensure all nocks were called
     expect(nock.isDone()).toBe(true);
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     nock.cleanAll();
     nock.enableNetConnect();
+    await disconnectFromDatabase();
   });
 });
-
-// For more information about testing with Jest see:
-// https://facebook.github.io/jest/
-
-// For more information about using TypeScript in your tests, Jest recommends:
-// https://github.com/kulshekhar/ts-jest
-
-// For more information about testing with Nock see:
-// https://github.com/nock/nock
