@@ -6,14 +6,8 @@ let mongoServer: MongoMemoryServer;
 
 export async function connectToDatabase() {
   try {
-    if (process.env.ENV === "prod" || process.env.ENV === "production") {
-      // Use MongoDB Atlas in production
-      const uri = process.env.MONGODB_ATLAS_CONNECTION_STRING;
-      if (!uri) {
-        throw new Error(
-          "env variable MONGODB_ATLAS_CONNECTION_STRING is not set"
-        );
-      }
+    const uri = process.env.MONGODB_ATLAS_CONNECTION_STRING;
+    if (uri) {
       await mongoose.connect(uri);
     } else {
       // Use in-memory database for development and testing
