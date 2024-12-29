@@ -9,13 +9,14 @@ export async function connectToDatabase() {
     const uri = process.env.MONGODB_ATLAS_CONNECTION_STRING;
     if (uri) {
       await mongoose.connect(uri);
+      console.log("Connected to real MongoDB");
     } else {
       // Use in-memory database for development and testing
       mongoServer = await MongoMemoryServer.create();
       const mongoUri = mongoServer.getUri();
       await mongoose.connect(mongoUri);
+      console.log("Connected to in-memory MongoDB");
     }
-    console.log("Connected to MongoDB successfully");
   } catch (error) {
     console.error("MongoDB connection error:", error);
     Sentry.captureException(error);

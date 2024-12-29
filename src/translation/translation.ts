@@ -11,6 +11,7 @@ type PullRequestProps = {
   app: Probot;
   octokit: InstanceType<typeof ProbotOctokit>;
   config: AppConfigFile;
+  installationId: number;
   owner: string;
   repo: string;
   prNumber: number;
@@ -22,6 +23,7 @@ export const createTranslationPR = async ({
   app,
   octokit,
   config,
+  installationId,
   owner,
   repo,
   prNumber,
@@ -79,6 +81,7 @@ export const createTranslationPR = async ({
         app,
         octokit,
         config,
+        installationId,
         owner,
         repo,
         language: newLanguage,
@@ -97,6 +100,7 @@ export const createTranslationPR = async ({
     app,
     octokit,
     config,
+    installationId,
     owner,
     repo,
     defaultFileChanges: translationChanges,

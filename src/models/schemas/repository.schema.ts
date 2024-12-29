@@ -24,6 +24,7 @@ repositorySchema.pre("save", function (next) {
   next();
 });
 
+repositorySchema.index({ installationId: 1 });
 repositorySchema.index({ installationId: 1, name: 1 }, { unique: true });
 
 export const Repository = model<IRepository>("Repository", repositorySchema);

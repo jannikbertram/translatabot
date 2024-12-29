@@ -5,11 +5,14 @@ import { AppConfigFile, TargetLanguage } from "../config/config";
 import { Gemini } from "../gemini/gemini";
 import { getDefaultBranch, getFileContent } from "../github/github";
 import { generateBranchName } from "./branchName";
+import { getRepositoryOrCreate } from "../models/repositories/repository.repository";
+import { createPullRequestDoc } from "../models/repositories/pullRequest.repository";
 
 export type FullTranslationProps = {
   app: Probot;
   octokit: InstanceType<typeof ProbotOctokit>;
   config: AppConfigFile;
+  installationId: number;
   owner: string;
   repo: string;
   language: TargetLanguage;
@@ -20,6 +23,7 @@ export const fullLanguageTranslationPR = async ({
   app,
   octokit,
   config,
+  installationId,
   owner,
   repo,
   language,
@@ -122,13 +126,34 @@ export const fullLanguageTranslationPR = async ({
     sha: newCommit.sha,
   });
 
+  const targetPRTitle = `[translatabot] Translation to ${language.language}`;
+  const targetPRBody = `This PR contains the initial translation of ${config.defaultPath} into ${language.language}.`;
   // 7. Create a pull request from the new branch to the main branch
-  await octokit.pulls.create({
+  const pr = await octokit.pulls.create({
     owner,
     repo,
-    title: `[translatabot] Translation to ${language.language}`,
+    title: targetPRTitle,
     head: branchName,
-    base: baseBranch ?? (await getDefaultBranch(octokit, owner, repo)),
-    body: `This PR contains the initial translation of ${config.defaultPath} into ${language.language}.`,
+    base: baseBranchOrDefault,
+    body: targetPRBody,
+  });
+
+  const repoName = `${owner}/${repo}`;
+  const repoDoc = await getRepositoryOrCreate(
+    installationId,
+    repoName,
+    "repo did not exist in installation, created it full translation flow."
+  );
+
+  await createPullRequestDoc({
+    installationId,
+    repositoryId: repoDoc._id.toString(),
+    repositoryFullName: repoName,
+    prNumber: pr.data.number,
+    title: targetPRTitle,
+    body: targetPRBody,
+    baseBranch: baseBranchOrDefault,
+    branchName,
+    type: "full_translation",
   });
 };

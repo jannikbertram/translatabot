@@ -58,7 +58,13 @@ export const App = (app: Probot) => {
       Sentry.setContext("installation.created", { owner, repo: repoName });
 
       try {
-        await createInitialPR(app, context.octokit, owner, repoName);
+        await createInitialPR({
+          app,
+          octokit: context.octokit,
+          installationId: installation.id,
+          owner,
+          repo: repoName,
+        });
       } catch (error) {
         app.log.error(error as Error);
         Sentry.captureException(error);
@@ -115,9 +121,21 @@ export const App = (app: Probot) => {
       prBaseBranch
     );
 
+    const installationId = context.payload.installation?.id;
+    if (!installationId) {
+      const error = new Error(
+        "No installation ID found in pull request context"
+      );
+      app.log.error(error);
+      Sentry.captureException(error, {
+        level: "fatal",
+      });
+      return;
+    }
     await createTranslationPR({
       app,
       octokit: context.octokit,
+      installationId,
       config,
       owner,
       repo: repoName,

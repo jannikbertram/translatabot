@@ -33,7 +33,7 @@ const marketplacePurchaseAccountSchema =
   });
 
 const marketplacePurchaseSchema = new Schema<IMarketplacePurchase>({
-  accountId: { type: Number, required: true, index: true },
+  accountId: { type: Number, required: true },
   account: { type: marketplacePurchaseAccountSchema, required: true },
   action: {
     type: String,
