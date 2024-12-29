@@ -66,6 +66,35 @@ export const App = (app: Probot) => {
     }
   });
 
+  app.on("installation_repositories", async (context) => {
+    await dbConnection;
+    const installation = context.payload.installation;
+
+    // Handle added repositories
+    if (context.payload.repositories_added?.length > 0) {
+      for (const repo of context.payload.repositories_added) {
+        await upsertRepository({
+          installationId: installation.id,
+          name: repo.full_name,
+          isActive: true,
+          action: `repo added to installation`,
+        });
+      }
+    }
+
+    // Handle removed repositories
+    if (context.payload.repositories_removed?.length > 0) {
+      for (const repo of context.payload.repositories_removed) {
+        await upsertRepository({
+          installationId: installation.id,
+          name: repo.full_name,
+          isActive: false,
+          action: `repo removed from installation`,
+        });
+      }
+    }
+  });
+
   app.on("pull_request.closed", async (context) => {
     await dbConnection;
     // only consider merged pull requests
