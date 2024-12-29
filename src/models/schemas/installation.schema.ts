@@ -14,7 +14,7 @@ export interface IInstallation {
 }
 
 const installationSchema = new Schema<IInstallation>({
-  installationId: { type: Number, required: true, unique: true },
+  installationId: { type: Number, required: true, unique: true, index: true },
   user: {
     id: { type: Number, required: true },
     login: { type: String, required: true },
@@ -32,6 +32,11 @@ const installationSchema = new Schema<IInstallation>({
   },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
+});
+
+installationSchema.pre("save", function (next) {
+  this.updatedAt = new Date();
+  next();
 });
 
 export const Installation = model<IInstallation>(

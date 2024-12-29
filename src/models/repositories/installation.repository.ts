@@ -1,6 +1,6 @@
-import { Installation, IInstallation } from "../schemas/Installation.schema";
+import { Installation, IInstallation } from "../schemas/installation.schema";
 import * as Sentry from "@sentry/node";
-import { WithObjectId } from "../db/mongoose.utils";
+import { WithObjectId } from "../../db/mongoose.utils";
 import { Installation as GithubInstallation } from "@octokit/webhooks-types";
 
 export async function upsertInstallation(
@@ -17,6 +17,7 @@ export async function upsertInstallation(
           email: githubInstallation.account.email,
         },
         repositorySelection: githubInstallation.repository_selection,
+        updatedAt: new Date(),
       },
       { new: true, upsert: true }
     ).lean();

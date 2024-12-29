@@ -3,9 +3,10 @@ import { Probot, ProbotOctokit } from "probot";
 
 import { App } from "../src";
 import { INITIAL_BRANCH_NAME } from "../src/setup/installation.created";
-import { getInstallation } from "../src/services/installation.service";
+import { getInstallation } from "../src/models/repositories/installation.repository";
 import { disconnectFromDatabase } from "../src/db/connection";
 import payload from "./fixtures/installation.created.json";
+import { getRepositoriesByInstallationId } from "../src/models/repositories/repository.repository";
 
 const MAIN_BRANCH = "main";
 
@@ -80,11 +81,15 @@ describe("Translatabot tests", () => {
     // Trigger the event
     await probot.receive({ name: "installation.created", payload });
     const installation = await getInstallation(payload.installation.id);
+    const repositories = await getRepositoriesByInstallationId(
+      payload.installation.id
+    );
     const pendingMocks = nock.pendingMocks();
     if (pendingMocks.length > 0) {
       console.log(nock.pendingMocks());
     }
     expect(installation).toBeTruthy();
+    expect(repositories.length).toBe(1);
     // Ensure all nocks were called
     expect(nock.isDone()).toBe(true);
   });
