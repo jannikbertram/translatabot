@@ -19,11 +19,5 @@ export async function getPullRequestDoc(
   repositoryFullName: string,
   prNumber: number
 ): Promise<WithObjectId<IPullRequest> | null> {
-  try {
-    return await PullRequest.findOne({ repositoryFullName, prNumber }).lean();
-  } catch (error) {
-    console.error("Error getting pull request:", error);
-    Sentry.captureException(error);
-    return null;
-  }
+  return PullRequest.findOne({ repositoryFullName, prNumber }).lean();
 }

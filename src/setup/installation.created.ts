@@ -82,7 +82,7 @@ export const createInitialPR = async ({
   );
 
   await createPullRequestDoc({
-    installationId: 1,
+    installationId,
     repositoryId: repository._id.toString(),
     repositoryFullName: repositoryFullName,
     prNumber: pr.data.number,
