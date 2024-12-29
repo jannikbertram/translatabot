@@ -2,11 +2,16 @@ import nock from "nock";
 import { Probot, ProbotOctokit } from "probot";
 
 import { App } from "../src";
-import { INITIAL_BRANCH_NAME } from "../src/setup/installation.created";
+import {
+  INITIAL_BRANCH_NAME,
+  INITIAL_PR_TITLE,
+  INITIAL_PR_BODY,
+} from "../src/setup/installation.created";
 import { getInstallation } from "../src/models/repositories/installation.repository";
 import { disconnectFromDatabase } from "../src/db/connection";
 import payload from "./fixtures/installation.created.json";
 import { getRepositoriesByInstallationId } from "../src/models/repositories/repository.repository";
+import { getPullRequestDoc } from "../src/models/repositories/pullRequest.repository";
 
 const MAIN_BRANCH = "main";
 
@@ -76,20 +81,37 @@ describe("Translatabot tests", () => {
     // Mock the API call to create a pull request
     nock("https://api.github.com")
       .post(`/repos/${TEST_REPO}/pulls`)
-      .reply(200, { html_url: `https://github.com/${TEST_REPO}/pull/1` });
+      .reply(200, {
+        html_url: `https://github.com/${TEST_REPO}/pull/1`,
+        number: 1,
+      });
 
     // Trigger the event
     await probot.receive({ name: "installation.created", payload });
-    const installation = await getInstallation(payload.installation.id);
-    const repositories = await getRepositoriesByInstallationId(
-      payload.installation.id
-    );
+    const [installation, repositories, pullRequest] = await Promise.all([
+      getInstallation(payload.installation.id),
+      getRepositoriesByInstallationId(payload.installation.id),
+      getPullRequestDoc(TEST_REPO, 1),
+    ]);
+
     const pendingMocks = nock.pendingMocks();
     if (pendingMocks.length > 0) {
       console.log(nock.pendingMocks());
     }
     expect(installation).toBeTruthy();
     expect(repositories.length).toBe(1);
+
+    // Assert pull request was created with correct data
+    expect(pullRequest).toBeTruthy();
+    expect(pullRequest?.installationId).toBe(payload.installation.id);
+    expect(pullRequest?.repositoryFullName).toBe(TEST_REPO);
+    expect(pullRequest?.prNumber).toBe(1);
+    expect(pullRequest?.title).toBe(INITIAL_PR_TITLE);
+    expect(pullRequest?.body).toBe(INITIAL_PR_BODY);
+    expect(pullRequest?.branchName).toBe(INITIAL_BRANCH_NAME);
+    expect(pullRequest?.baseBranch).toBe(MAIN_BRANCH);
+    expect(pullRequest?.type).toBe("initial");
+
     // Ensure all nocks were called
     expect(nock.isDone()).toBe(true);
   });

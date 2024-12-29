@@ -14,7 +14,7 @@ export interface IInstallation {
 }
 
 const installationSchema = new Schema<IInstallation>({
-  installationId: { type: Number, required: true, unique: true, index: true },
+  installationId: { type: Number, required: true, unique: true },
   user: {
     id: { type: Number, required: true },
     login: { type: String, required: true },

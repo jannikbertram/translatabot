@@ -5,11 +5,14 @@ import { APP_NAME, AppConfigFile } from "../config/config";
 import { Gemini } from "../gemini/gemini";
 import { getDefaultBranch, getFileContent } from "../github/github";
 import { generateBranchName } from "./branchName";
+import { getRepositoryOrCreate } from "../models/repositories/repository.repository";
+import { createPullRequestDoc } from "../models/repositories/pullRequest.repository";
 
 type PartialTranslationProps = {
   app: Probot;
   octokit: InstanceType<typeof ProbotOctokit>;
   config: AppConfigFile;
+  installationId: number;
   owner: string;
   repo: string;
   defaultFileChanges: string;
@@ -22,6 +25,7 @@ export const partialTranslationUpdatePR = async ({
   app,
   octokit,
   config,
+  installationId,
   owner,
   repo,
   defaultFileChanges,
@@ -138,15 +142,38 @@ export const partialTranslationUpdatePR = async ({
     sha: newCommit.sha,
   });
 
+  const targetPRTitle = `[${APP_NAME}] Translations for [${
+    prTitle ?? commitShaShort
+  }]`;
+  const targetPRBody = `This PR contains updates to all translation files ${
+    prNumber ? `based on the changes of #${prNumber}` : ""
+  }`;
   // 7. Create a pull request from the new branch to the main branch
-  await octokit.pulls.create({
+  const pr = await octokit.pulls.create({
     owner,
     repo,
-    title: `[${APP_NAME}] Translations for [${prTitle ?? commitShaShort}]`,
+    title: targetPRTitle,
     head: branchName,
-    base: baseBranch ?? (await getDefaultBranch(octokit, owner, repo)),
-    body: `This PR contains updates to all translation files ${
-      prNumber ? `based on the changes of #${prNumber}` : ""
-    }`,
+    base: baseBranchOrDefault,
+    body: targetPRBody,
+  });
+
+  const repoName = `${owner}/${repo}`;
+  const repoDoc = await getRepositoryOrCreate(
+    installationId,
+    repoName,
+    "repo did not exist in installation, created it partial translation flow."
+  );
+
+  await createPullRequestDoc({
+    installationId,
+    repositoryId: repoDoc._id.toString(),
+    repositoryFullName: repoName,
+    prNumber: pr.data.number,
+    title: targetPRTitle,
+    body: targetPRBody,
+    baseBranch: baseBranchOrDefault,
+    branchName,
+    type: "partial_translation",
   });
 };

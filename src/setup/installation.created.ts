@@ -3,16 +3,29 @@ import { Probot, ProbotOctokit } from "probot";
 import { APP_NAME, defaultConfigYaml } from "../config/config";
 import { getDefaultBranch } from "../github/github";
 import { findFluentResourceFile } from "./translation_file_finder";
+import { createPullRequestDoc } from "../models/repositories/pullRequest.repository";
+import { getRepositoryOrCreate } from "../models/repositories/repository.repository";
 
 export const INITIAL_BRANCH_NAME = `${APP_NAME}/config`;
 export const CONFIG_FILE_PATH = ".github/translatabot.yml";
+export const INITIAL_PR_TITLE = "Add default configuration file";
+export const INITIAL_PR_BODY =
+  "This PR adds a default configuration file for Translatabot\n" +
+  "Make sure to update 'defaultPath' and 'languages' according to your needs.";
 
-export const createInitialPR = async (
-  app: Probot,
-  octokit: InstanceType<typeof ProbotOctokit>,
-  owner: string,
-  repo: string
-) => {
+export const createInitialPR = async ({
+  app,
+  octokit,
+  installationId,
+  owner,
+  repo,
+}: {
+  app: Probot;
+  octokit: InstanceType<typeof ProbotOctokit>;
+  installationId: number;
+  owner: string;
+  repo: string;
+}) => {
   const commitMessage = `Add ${APP_NAME} configuration file`;
 
   const defaultBranch = await getDefaultBranch(octokit, owner, repo);
@@ -52,15 +65,32 @@ export const createInitialPR = async (
   });
 
   // Create a Pull Request to merge the new configuration
-  await octokit.pulls.create({
+  const pr = await octokit.pulls.create({
     owner,
     repo,
-    title: "Add default configuration file",
+    title: INITIAL_PR_TITLE,
     head: INITIAL_BRANCH_NAME,
     base: defaultBranch,
-    body:
-      "This PR adds a default configuration file for Translatabot\n" +
-      "Make sure to update 'defaultPath' and 'languages' according to your needs.",
+    body: INITIAL_PR_BODY,
+  });
+
+  const repositoryFullName = `${owner}/${repo}`;
+  const repository = await getRepositoryOrCreate(
+    installationId,
+    repositoryFullName,
+    "repo did not exist for installation, created it in initial PR flow"
+  );
+
+  await createPullRequestDoc({
+    installationId,
+    repositoryId: repository._id.toString(),
+    repositoryFullName: repositoryFullName,
+    prNumber: pr.data.number,
+    title: INITIAL_PR_TITLE,
+    body: INITIAL_PR_BODY,
+    baseBranch: defaultBranch,
+    branchName: INITIAL_BRANCH_NAME,
+    type: "initial",
   });
 
   app.log.info(`Created PR to add config file in ${owner}/${repo}`);
