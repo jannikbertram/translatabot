@@ -1,5 +1,11 @@
 import { Schema, model } from "mongoose";
 
+export type ContentPerFile = {
+  path: string;
+  content: string;
+  language?: string;
+};
+
 export type PullRequestType =
   | "initial"
   | "partial_translation"
@@ -12,7 +18,8 @@ export interface IPullRequest {
   prNumber: number;
   title: string;
   body: string;
-  content: string;
+  contentPerFile: ContentPerFile[];
+  contentSizeLimitExceeded?: boolean;
   branchName: string;
   baseBranch: string;
   type: PullRequestType;
@@ -29,7 +36,8 @@ const pullRequestSchema = new Schema<IPullRequest>({
   prNumber: { type: Number, required: true },
   title: { type: String, required: true },
   body: { type: String, required: true },
-  content: { type: String, required: true },
+  contentPerFile: { type: [Object], required: true },
+  contentSizeLimitExceeded: { type: Boolean, required: false },
   baseBranch: { type: String, required: true },
   branchName: { type: String, required: true },
   type: { type: String, required: true, enum: ["initial", "translation"] },

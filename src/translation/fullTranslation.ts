@@ -94,6 +94,7 @@ export const fullLanguageTranslationPR = async ({
     encoding: "base64",
   });
 
+  const targetPath = join(dirname(config.defaultPath), language.relativePath);
   // 4. Create a new tree with the updated de.ts file
   const { data: newTree } = await octokit.git.createTree({
     owner,
@@ -101,7 +102,7 @@ export const fullLanguageTranslationPR = async ({
     base_tree: treeSha,
     tree: [
       {
-        path: join(dirname(config.defaultPath), language.relativePath),
+        path: targetPath,
         mode: "100644",
         type: "blob",
         sha: newBlob.sha,
@@ -127,7 +128,7 @@ export const fullLanguageTranslationPR = async ({
   });
 
   const targetPRTitle = `[translatabot] Translation to ${language.language}`;
-  const targetPRBody = `This PR contains the initial translation of ${config.defaultPath} into ${language.language}.`;
+  const targetPRBody = `This PR contains the initial translation of \`${config.defaultPath}\` into **${language.language}**.`;
   // 7. Create a pull request from the new branch to the main branch
   const pr = await octokit.pulls.create({
     owner,
@@ -152,7 +153,13 @@ export const fullLanguageTranslationPR = async ({
     prNumber: pr.data.number,
     title: targetPRTitle,
     body: targetPRBody,
-    content,
+    contentPerFile: [
+      {
+        path: targetPath,
+        content,
+        language: language.language,
+      },
+    ],
     baseBranch: baseBranchOrDefault,
     branchName,
     type: "full_translation",
