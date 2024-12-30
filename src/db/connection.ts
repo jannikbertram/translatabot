@@ -19,7 +19,6 @@ async function attemptConnection(): Promise<void> {
     console.log(`Connected to ${isInMemory ? "in-memory" : "real"} MongoDB`);
   } catch (error) {
     console.error("MongoDB connection error:", error);
-    Sentry.captureException(error);
     throw error;
   }
 }
