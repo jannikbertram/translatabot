@@ -54,13 +54,14 @@ export const createInitialPR = async ({
     app.log.info(`No FluentResource file found in ${owner}/${repo}`);
   }
 
+  const content = defaultConfigYaml(baseFilePath, "base64");
   // Create the configuration file in the new branch
   await octokit.repos.createOrUpdateFileContents({
     owner: owner,
     repo,
     path: CONFIG_FILE_PATH,
     message: commitMessage,
-    content: defaultConfigYaml(baseFilePath, "base64"),
+    content,
     branch: INITIAL_BRANCH_NAME,
   });
 
@@ -88,6 +89,7 @@ export const createInitialPR = async ({
     prNumber: pr.data.number,
     title: INITIAL_PR_TITLE,
     body: INITIAL_PR_BODY,
+    content,
     baseBranch: defaultBranch,
     branchName: INITIAL_BRANCH_NAME,
     type: "initial",
