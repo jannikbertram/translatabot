@@ -1,9 +1,9 @@
-// Import with `import * as Sentry from "@sentry/node"` if you are using ESM
 import * as Sentry from "@sentry/node";
 import { nodeProfilingIntegration } from "@sentry/profiling-node";
 
 if (process.env.ENV === "prod") {
   Sentry.init({
+    environment: process.env.ENV,
     dsn: "https://fa26b75a35ab25001f37a38b2ef4acd7@o4507939297820672.ingest.de.sentry.io/4507939302080592",
     integrations: [nodeProfilingIntegration()],
     // Tracing
