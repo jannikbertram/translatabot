@@ -1,0 +1,82 @@
+{
+  "action": "added",
+  "installation": {
+    "id": 57897494,
+    "client_id": "Iv23liBxndsbrsqT3j5b",
+    "account": {
+      "login": "Aurorxa",
+      "id": 25677587,
+      "node_id": "MDQ6VXNlcjI1Njc3NTg3",
+      "avatar_url": "https://avatars.githubusercontent.com/u/25677587?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/Aurorxa",
+      "html_url": "https://github.com/Aurorxa",
+      "followers_url": "https://api.github.com/users/Aurorxa/followers",
+      "following_url": "https://api.github.com/users/Aurorxa/following{/other_user}",
+      "gists_url": "https://api.github.com/users/Aurorxa/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/Aurorxa/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/Aurorxa/subscriptions",
+      "organizations_url": "https://api.github.com/users/Aurorxa/orgs",
+      "repos_url": "https://api.github.com/users/Aurorxa/repos",
+      "events_url": "https://api.github.com/users/Aurorxa/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/Aurorxa/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "repository_selection": "all",
+    "access_tokens_url": "https://api.github.com/app/installations/57897494/access_tokens",
+    "repositories_url": "https://api.github.com/installation/repositories",
+    "html_url": "https://github.com/settings/installations/57897494",
+    "app_id": 977183,
+    "app_slug": "translatabotai",
+    "target_id": 25677587,
+    "target_type": "User",
+    "permissions": {
+      "contents": "write",
+      "metadata": "read",
+      "pull_requests": "write"
+    },
+    "events": ["pull_request"],
+    "created_at": "2024-12-03T11:24:22.000+08:00",
+    "updated_at": "2024-12-16T17:25:52.000+08:00",
+    "single_file_name": null,
+    "has_multiple_single_files": false,
+    "single_file_paths": [],
+    "suspended_by": null,
+    "suspended_at": null
+  },
+  "repository_selection": "all",
+  "repositories_added": [
+    {
+      "id": 909896568,
+      "node_id": "R_kgDONjvreA",
+      "name": "emb",
+      "full_name": "Aurorxa/emb",
+      "private": false
+    }
+  ],
+  "repositories_removed": [],
+  "requester": null,
+  "sender": {
+    "login": "Aurorxa",
+    "id": 25677587,
+    "node_id": "MDQ6VXNlcjI1Njc3NTg3",
+    "avatar_url": "https://avatars.githubusercontent.com/u/25677587?v=4",
+    "gravatar_id": "",
+    "url": "https://api.github.com/users/Aurorxa",
+    "html_url": "https://github.com/Aurorxa",
+    "followers_url": "https://api.github.com/users/Aurorxa/followers",
+    "following_url": "https://api.github.com/users/Aurorxa/following{/other_user}",
+    "gists_url": "https://api.github.com/users/Aurorxa/gists{/gist_id}",
+    "starred_url": "https://api.github.com/users/Aurorxa/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/Aurorxa/subscriptions",
+    "organizations_url": "https://api.github.com/users/Aurorxa/orgs",
+    "repos_url": "https://api.github.com/users/Aurorxa/repos",
+    "events_url": "https://api.github.com/users/Aurorxa/events{/privacy}",
+    "received_events_url": "https://api.github.com/users/Aurorxa/received_events",
+    "type": "User",
+    "user_view_type": "public",
+    "site_admin": false
+  }
+}

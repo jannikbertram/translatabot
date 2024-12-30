@@ -6,13 +6,15 @@ export const findFluentResourceFile = async (
   owner: string,
   repo: string
 ) => {
-  const query = `repo:${owner}/${repo}  new FluentResource`;
+  const query = `repo:${owner}/${repo} new FluentResource`;
 
-  app.log.info(`Search query: ${query}`);
+  console.log(`Search query: ${query}`);
   try {
     const searchResponse = await octokit.rest.search.code({
       q: query,
     });
+
+    console.log("Search response:", searchResponse.data.items);
 
     const baseFile = searchResponse.data.items.find((item) =>
       item.name.toLowerCase().includes("en")
