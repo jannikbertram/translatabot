@@ -89,7 +89,12 @@ export const createInitialPR = async ({
     prNumber: pr.data.number,
     title: INITIAL_PR_TITLE,
     body: INITIAL_PR_BODY,
-    content,
+    contentPerFile: [
+      {
+        path: CONFIG_FILE_PATH,
+        content,
+      },
+    ],
     baseBranch: defaultBranch,
     branchName: INITIAL_BRANCH_NAME,
     type: "initial",

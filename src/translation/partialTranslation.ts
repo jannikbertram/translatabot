@@ -38,7 +38,7 @@ export const partialTranslationUpdatePR = async ({
 
   const GeminiModel = new Gemini();
   const blobPerLanguage = [];
-  const contentPerLanguage = [];
+  const contentPerFile = [];
   for (const { language, relativePath } of config.languages) {
     const translationFilePath = join(dirname(config.defaultPath), relativePath);
 
@@ -71,7 +71,11 @@ export const partialTranslationUpdatePR = async ({
     });
 
     blobPerLanguage.push(blob);
-    contentPerLanguage.push(content);
+    contentPerFile.push({
+      path: translationFilePath,
+      content,
+      language: language,
+    });
   }
 
   // Get the latest commit SHA of the main branch
@@ -170,7 +174,7 @@ export const partialTranslationUpdatePR = async ({
     prNumber: pr.data.number,
     title: targetPRTitle,
     body: targetPRBody,
-    content: contentPerLanguage.join("\n#new language\n"),
+    contentPerFile,
     baseBranch: baseBranchOrDefault,
     branchName,
     type: "partial_translation",

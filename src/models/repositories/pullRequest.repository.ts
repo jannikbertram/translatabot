@@ -1,29 +1,33 @@
-import * as Sentry from "@sentry/node";
 import { PullRequest, IPullRequest } from "../schemas/pull_request.schema";
 import { WithObjectId } from "../../db/mongoose.utils";
-
-const MAX_CONTENT_LENGTH = 10000;
 
 export async function createPullRequestDoc(
   pullRequestData: Omit<IPullRequest, "createdAt" | "updatedAt">
 ): Promise<WithObjectId<IPullRequest> | null> {
-  try {
-    if (pullRequestData.content.length > MAX_CONTENT_LENGTH) {
-      console.warn(
-        `Content truncated from ${pullRequestData.content.length} to ${MAX_CONTENT_LENGTH} characters`
-      );
-    }
+  let sizeLimitExceeded = false;
+  // Calculate total byte size of contentPerFile
+  const contentSize = pullRequestData.contentPerFile.reduce((size, file) => {
+    if (!file.content) return size;
+    // Convert string to Buffer to get actual byte length
+    return size + Buffer.byteLength(file.content, "utf8");
+  }, 0);
 
-    const pullRequest = new PullRequest({
-      ...pullRequestData,
-      content: pullRequestData.content.slice(0, MAX_CONTENT_LENGTH),
-    });
-    return await pullRequest.save();
-  } catch (error) {
-    console.error("Error creating pull request:", error);
-    Sentry.captureException(error);
-    return null;
+  // If content is larger than 1MB, set to empty array
+  if (contentSize > 1024 * 1024) {
+    sizeLimitExceeded = true;
   }
+
+  const pullRequest = new PullRequest(
+    sizeLimitExceeded
+      ? {
+          ...pullRequestData,
+          contentPerFile: [],
+          contentSizeLimitExceeded: true,
+        }
+      : pullRequestData
+  );
+  const pullRequestDoc = await pullRequest.save();
+  return pullRequestDoc.toObject();
 }
 
 export async function getPullRequestDoc(
