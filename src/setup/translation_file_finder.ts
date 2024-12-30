@@ -1,7 +1,6 @@
-import { Probot, ProbotOctokit } from "probot";
+import { ProbotOctokit } from "probot";
 
 export const findFluentResourceFile = async (
-  app: Probot,
   octokit: InstanceType<typeof ProbotOctokit>,
   owner: string,
   repo: string
@@ -22,7 +21,7 @@ export const findFluentResourceFile = async (
 
     return baseFile?.path;
   } catch (error) {
-    app.log.error(`Error searching for FluentResource file: ${error}`);
+    console.error(`Error searching for FluentResource file: ${error}`);
     return undefined;
   }
 };

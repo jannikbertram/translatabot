@@ -1,5 +1,5 @@
 import { dirname, join } from "path";
-import { Probot, ProbotOctokit } from "probot";
+import { ProbotOctokit } from "probot";
 
 import { AppConfigFile, TargetLanguage } from "../config/config";
 import { Gemini } from "../gemini/gemini";
@@ -9,7 +9,6 @@ import { getRepositoryOrCreate } from "../models/repositories/repository.reposit
 import { createPullRequestDoc } from "../models/repositories/pullRequest.repository";
 
 export type FullTranslationProps = {
-  app: Probot;
   octokit: InstanceType<typeof ProbotOctokit>;
   config: AppConfigFile;
   installationId: number;
@@ -20,7 +19,6 @@ export type FullTranslationProps = {
 };
 
 export const fullLanguageTranslationPR = async ({
-  app,
   octokit,
   config,
   installationId,
@@ -41,7 +39,7 @@ export const fullLanguageTranslationPR = async ({
   );
 
   if (!baseFileContent) {
-    app.log.error(
+    console.error(
       `Base file ${config.defaultPath} not found in ${owner}/${repo}`
     );
     return;

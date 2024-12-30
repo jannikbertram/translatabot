@@ -12,20 +12,9 @@ import { upsertInstallation } from "./models/repositories/installation.repositor
 import { upsertMarketplacePurchase } from "./models/repositories/marketplacePurchase.repository";
 import { upsertRepository } from "./models/repositories/repository.repository";
 
-// Create a promise to track database connection
-let dbConnection: Promise<void>;
-
-// Initialize database connection
-const initDatabase = () => {
-  dbConnection = connectToDatabase().catch((error) => {
-    console.error("Failed to connect to database:", error);
-    Sentry.captureException(error);
-    process.exit(1);
-  });
-};
-
 export const App = (app: Probot) => {
-  initDatabase();
+  // Create a promise to track database connection
+  const dbConnection = connectToDatabase();
 
   app.on("installation.created", async (context) => {
     await dbConnection;
@@ -38,7 +27,7 @@ export const App = (app: Probot) => {
     const repos = context.payload.repositories ?? [];
 
     if (repos.length === 0) {
-      app.log.info(`No repositories found for installation ${installation.id}`);
+      console.log(`No repositories found for installation ${installation.id}`);
       return;
     }
 
@@ -59,14 +48,13 @@ export const App = (app: Probot) => {
 
       try {
         await createInitialPR({
-          app,
           octokit: context.octokit,
           installationId: installation.id,
           owner,
           repo: repoName,
         });
       } catch (error) {
-        app.log.error(error as Error);
+        console.error(error as Error);
         Sentry.captureException(error);
       }
     }
@@ -126,14 +114,13 @@ export const App = (app: Probot) => {
       const error = new Error(
         "No installation ID found in pull request context"
       );
-      app.log.error(error);
+      console.error(error);
       Sentry.captureException(error, {
         level: "fatal",
       });
       return;
     }
     await createTranslationPR({
-      app,
       octokit: context.octokit,
       installationId,
       config,
@@ -160,15 +147,15 @@ export const App = (app: Probot) => {
         },
         action: context.payload.action,
       });
-      app.log.info(`Marketplace purchase saved for account ${account.login}`);
+      console.log(`Marketplace purchase saved for account ${account.login}`);
     } catch (error) {
-      app.log.error("Error saving marketplace purchase:", error);
+      console.error("Error saving marketplace purchase:", error);
       Sentry.captureException(error);
     }
   });
 
   app.onError((error) => {
-    app.log.error(error as Error);
+    console.error(error as Error);
     Sentry.captureException(error);
   });
 };
