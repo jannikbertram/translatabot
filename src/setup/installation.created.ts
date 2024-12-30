@@ -2,7 +2,7 @@ import { ProbotOctokit } from "probot";
 
 import { defaultConfigYaml } from "../config/config";
 import { getDefaultBranch } from "../github/github";
-import { findFluentResourceFile } from "./translation_file_finder";
+import { findDefaultTranslationFile } from "./translation_file_finder";
 import { createPullRequestDoc } from "../models/repositories/pullRequest.repository";
 import { getRepositoryOrCreate } from "../models/repositories/repository.repository";
 
@@ -42,7 +42,7 @@ export const createInitialPR = async ({
     sha: refData.object.sha,
   });
 
-  const baseFilePath = await findFluentResourceFile(octokit, owner, repo);
+  const baseFilePath = await findDefaultTranslationFile(octokit, owner, repo);
 
   if (baseFilePath) {
     console.log(
