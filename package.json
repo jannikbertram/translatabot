@@ -19,7 +19,7 @@
   "dependencies": {
     "@google/generative-ai": "^0.21.0",
     "@sentry/node": "^8.30.0",
-    "@sentry/profiling-node": "^8.30.0",
+    "@sentry/profiling-node": "^8.47.0",
     "date-fns": "^3.6.0",
     "mongodb-memory-server": "^10.1.2",
     "mongoose": "^8.9.2",
