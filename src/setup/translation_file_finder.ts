@@ -1,27 +1,24 @@
 import { ProbotOctokit } from "probot";
 
-export const findFluentResourceFile = async (
+export const findDefaultTranslationFile = async (
   octokit: InstanceType<typeof ProbotOctokit>,
   owner: string,
   repo: string
 ) => {
-  const query = `repo:${owner}/${repo} new FluentResource`;
+  // Search for files containing 'en' with .ts or .json extensions
+  const query = `repo:${owner}/${repo} filename:(en.ts OR en.json OR en-*.ts OR en-*.json)`;
 
-  console.log(`Search query: ${query}`);
   try {
     const searchResponse = await octokit.rest.search.code({
       q: query,
     });
 
-    console.log("Search response:", searchResponse.data.items);
-
-    const baseFile = searchResponse.data.items.find((item) =>
-      item.name.toLowerCase().includes("en")
-    );
+    // Find the first matching English translation file
+    const baseFile = searchResponse.data.items[0];
 
     return baseFile?.path;
   } catch (error) {
-    console.error(`Error searching for FluentResource file: ${error}`);
+    console.error(`Error searching for English translation file: ${error}`);
     return undefined;
   }
 };
