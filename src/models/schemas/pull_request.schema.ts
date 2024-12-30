@@ -40,7 +40,11 @@ const pullRequestSchema = new Schema<IPullRequest>({
   contentSizeLimitExceeded: { type: Boolean, required: false },
   baseBranch: { type: String, required: true },
   branchName: { type: String, required: true },
-  type: { type: String, required: true, enum: ["initial", "translation"] },
+  type: {
+    type: String,
+    required: true,
+    enum: ["initial", "full_translation", "partial_translation"],
+  },
   sourceLanguage: { type: String, required: false },
   targetLanguage: { type: String, required: false },
   sourcePrNumber: { type: Number, required: false },
