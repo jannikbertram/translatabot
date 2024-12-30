@@ -152,6 +152,7 @@ export const fullLanguageTranslationPR = async ({
     prNumber: pr.data.number,
     title: targetPRTitle,
     body: targetPRBody,
+    content,
     baseBranch: baseBranchOrDefault,
     branchName,
     type: "full_translation",

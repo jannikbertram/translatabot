@@ -37,44 +37,42 @@ export const partialTranslationUpdatePR = async ({
     baseBranch ?? (await getDefaultBranch(octokit, owner, repo));
 
   const GeminiModel = new Gemini();
-  const blobPerLanguage = await Promise.all(
-    config.languages.map(async ({ language, relativePath }) => {
-      const translationFilePath = join(
-        dirname(config.defaultPath),
-        relativePath
+  const blobPerLanguage = [];
+  const contentPerLanguage = [];
+  for (const { language, relativePath } of config.languages) {
+    const translationFilePath = join(dirname(config.defaultPath), relativePath);
+
+    const translationFileContent = await getFileContent(
+      octokit,
+      translationFilePath,
+      owner,
+      repo,
+      { ref: baseBranchOrDefault }
+    );
+
+    if (!translationFileContent) {
+      app.log.error(
+        `Translation file ${translationFilePath} not found in ${owner}/${repo}`
       );
+      continue;
+    }
 
-      const translationFileContent = await getFileContent(
-        octokit,
-        translationFilePath,
-        owner,
-        repo,
-        { ref: baseBranchOrDefault }
-      );
+    const content = await GeminiModel.translatePartial(
+      translationFileContent,
+      defaultFileChanges,
+      language
+    );
 
-      if (!translationFileContent) {
-        app.log.error(
-          `Translation file ${translationFilePath} not found in ${owner}/${repo}`
-        );
-        return;
-      }
+    const { data: blob } = await octokit.git.createBlob({
+      owner,
+      repo,
+      content,
+      encoding: "base64",
+    });
 
-      const content = await GeminiModel.translatePartial(
-        translationFileContent,
-        defaultFileChanges,
-        language
-      );
-
-      const { data: blob } = await octokit.git.createBlob({
-        owner,
-        repo,
-        content,
-        encoding: "base64",
-      });
-
-      return blob;
-    })
-  );
+    blobPerLanguage.push(blob);
+    contentPerLanguage.push(content);
+  }
 
   // Get the latest commit SHA of the main branch
   const { data: refData } = await octokit.git.getRef({
@@ -172,6 +170,7 @@ export const partialTranslationUpdatePR = async ({
     prNumber: pr.data.number,
     title: targetPRTitle,
     body: targetPRBody,
+    content: contentPerLanguage.join("\n#new language\n"),
     baseBranch: baseBranchOrDefault,
     branchName,
     type: "partial_translation",

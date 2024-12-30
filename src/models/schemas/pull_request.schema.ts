@@ -12,6 +12,7 @@ export interface IPullRequest {
   prNumber: number;
   title: string;
   body: string;
+  content: string;
   branchName: string;
   baseBranch: string;
   type: PullRequestType;
@@ -28,6 +29,7 @@ const pullRequestSchema = new Schema<IPullRequest>({
   prNumber: { type: Number, required: true },
   title: { type: String, required: true },
   body: { type: String, required: true },
+  content: { type: String, required: true },
   baseBranch: { type: String, required: true },
   branchName: { type: String, required: true },
   type: { type: String, required: true, enum: ["initial", "translation"] },

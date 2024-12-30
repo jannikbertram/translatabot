@@ -1,16 +1,16 @@
 import { Probot, ProbotOctokit } from "probot";
 
-import { APP_NAME, defaultConfigYaml } from "../config/config";
+import { defaultConfigYaml } from "../config/config";
 import { getDefaultBranch } from "../github/github";
 import { findFluentResourceFile } from "./translation_file_finder";
 import { createPullRequestDoc } from "../models/repositories/pullRequest.repository";
 import { getRepositoryOrCreate } from "../models/repositories/repository.repository";
 
-export const INITIAL_BRANCH_NAME = `${APP_NAME}/config`;
-export const CONFIG_FILE_PATH = ".github/translatabot.yml";
-export const INITIAL_PR_TITLE = "Add default configuration file";
+export const INITIAL_BRANCH_NAME = "translatabot/config";
+export const CONFIG_FILE_PATH = `.github/translatabot.yml`;
+export const INITIAL_PR_TITLE = `[translatabot] Add configuration file`;
 export const INITIAL_PR_BODY =
-  "This PR adds a default configuration file for Translatabot\n" +
+  `This PR adds a configuration file for Translatabot\n` +
   "Make sure to update 'defaultPath' and 'languages' according to your needs.";
 
 export const createInitialPR = async ({
@@ -26,7 +26,7 @@ export const createInitialPR = async ({
   owner: string;
   repo: string;
 }) => {
-  const commitMessage = `Add ${APP_NAME} configuration file`;
+  const commitMessage = `[translatabot] Add configuration file`;
 
   const defaultBranch = await getDefaultBranch(octokit, owner, repo);
 
@@ -54,13 +54,14 @@ export const createInitialPR = async ({
     app.log.info(`No FluentResource file found in ${owner}/${repo}`);
   }
 
+  const content = defaultConfigYaml(baseFilePath, "base64");
   // Create the configuration file in the new branch
   await octokit.repos.createOrUpdateFileContents({
     owner: owner,
     repo,
     path: CONFIG_FILE_PATH,
     message: commitMessage,
-    content: defaultConfigYaml(baseFilePath, "base64"),
+    content,
     branch: INITIAL_BRANCH_NAME,
   });
 
@@ -88,6 +89,7 @@ export const createInitialPR = async ({
     prNumber: pr.data.number,
     title: INITIAL_PR_TITLE,
     body: INITIAL_PR_BODY,
+    content,
     baseBranch: defaultBranch,
     branchName: INITIAL_BRANCH_NAME,
     type: "initial",
