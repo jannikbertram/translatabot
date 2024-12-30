@@ -30,6 +30,9 @@ export async function connectToDatabase(maxRetries = 3): Promise<void> {
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       await attemptConnection();
+      Sentry.captureMessage(
+        `Yay! Connected to MongoDB after ${attempt} attempts`
+      );
       return; // Connection successful
     } catch (error) {
       lastError = error as Error;
