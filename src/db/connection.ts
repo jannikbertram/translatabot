@@ -4,24 +4,48 @@ import * as Sentry from "@sentry/node";
 
 let mongoServer: MongoMemoryServer;
 
-export async function connectToDatabase() {
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function attemptConnection(): Promise<void> {
   try {
-    const uri = process.env.MONGODB_ATLAS_CONNECTION_STRING;
-    if (uri) {
-      await mongoose.connect(uri);
-      console.log("Connected to real MongoDB");
-    } else {
-      // Use in-memory database for development and testing
+    let uri = process.env.MONGODB_ATLAS_CONNECTION_STRING;
+    let isInMemory = false;
+    if (!uri) {
       mongoServer = await MongoMemoryServer.create();
-      const mongoUri = mongoServer.getUri();
-      await mongoose.connect(mongoUri);
-      console.log("Connected to in-memory MongoDB");
+      uri = mongoServer.getUri();
+      isInMemory = true;
     }
+    await mongoose.connect(uri);
+    console.log(`Connected to ${isInMemory ? "in-memory" : "real"} MongoDB`);
   } catch (error) {
     console.error("MongoDB connection error:", error);
     Sentry.captureException(error);
     throw error;
   }
+}
+
+export async function connectToDatabase(maxRetries = 3): Promise<void> {
+  let lastError: Error | undefined;
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      await attemptConnection();
+      return; // Connection successful
+    } catch (error) {
+      lastError = error as Error;
+      if (attempt < maxRetries) {
+        const backoffTime = attempt * 1000; // 1s, 2s, 3s
+        console.log(
+          `Retrying connection in ${backoffTime}ms (attempt ${attempt}/${maxRetries})`
+        );
+        await delay(backoffTime);
+      }
+    }
+  }
+
+  // If we get here, all retries failed
+  console.error(`Failed to connect to MongoDB after ${maxRetries} attempts`);
+  throw lastError;
 }
 
 export async function disconnectFromDatabase() {

@@ -1,4 +1,4 @@
-import { Probot, ProbotOctokit } from "probot";
+import { ProbotOctokit } from "probot";
 
 import { defaultConfigYaml } from "../config/config";
 import { getDefaultBranch } from "../github/github";
@@ -14,13 +14,11 @@ export const INITIAL_PR_BODY =
   "Make sure to update 'defaultPath' and 'languages' according to your needs.";
 
 export const createInitialPR = async ({
-  app,
   octokit,
   installationId,
   owner,
   repo,
 }: {
-  app: Probot;
   octokit: InstanceType<typeof ProbotOctokit>;
   installationId: number;
   owner: string;
@@ -44,14 +42,14 @@ export const createInitialPR = async ({
     sha: refData.object.sha,
   });
 
-  const baseFilePath = await findFluentResourceFile(app, octokit, owner, repo);
+  const baseFilePath = await findFluentResourceFile(octokit, owner, repo);
 
   if (baseFilePath) {
-    app.log.info(
+    console.log(
       `Found FluentResource file at ${baseFilePath} in ${owner}/${repo}`
     );
   } else {
-    app.log.info(`No FluentResource file found in ${owner}/${repo}`);
+    console.log(`No FluentResource file found in ${owner}/${repo}`);
   }
 
   const content = defaultConfigYaml(baseFilePath, "base64");
@@ -100,5 +98,5 @@ export const createInitialPR = async ({
     type: "initial",
   });
 
-  app.log.info(`Created PR to add config file in ${owner}/${repo}`);
+  console.log(`Created PR to add config file in ${owner}/${repo}`);
 };

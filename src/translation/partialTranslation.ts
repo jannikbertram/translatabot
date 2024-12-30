@@ -1,5 +1,5 @@
 import { dirname, join } from "path";
-import { Probot, ProbotOctokit } from "probot";
+import { ProbotOctokit } from "probot";
 
 import { APP_NAME, AppConfigFile } from "../config/config";
 import { Gemini } from "../gemini/gemini";
@@ -9,7 +9,6 @@ import { getRepositoryOrCreate } from "../models/repositories/repository.reposit
 import { createPullRequestDoc } from "../models/repositories/pullRequest.repository";
 
 type PartialTranslationProps = {
-  app: Probot;
   octokit: InstanceType<typeof ProbotOctokit>;
   config: AppConfigFile;
   installationId: number;
@@ -22,7 +21,6 @@ type PartialTranslationProps = {
 };
 
 export const partialTranslationUpdatePR = async ({
-  app,
   octokit,
   config,
   installationId,
@@ -51,7 +49,7 @@ export const partialTranslationUpdatePR = async ({
     );
 
     if (!translationFileContent) {
-      app.log.error(
+      console.error(
         `Translation file ${translationFilePath} not found in ${owner}/${repo}`
       );
       continue;
