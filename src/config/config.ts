@@ -4,7 +4,6 @@ import { Document as YamlDocument, parse as yamlParse } from "yaml";
 import { getFileContent } from "../github/github";
 import { CONFIG_FILE_PATH } from "../setup/installation.created";
 
-export const APP_NAME = "translatabot";
 export const DEFAULT_PATH_COMMENT = " Path to the default translation file";
 export const RELATIVE_PATH_COMMENT =
   " Relative path to the auto-translated file";

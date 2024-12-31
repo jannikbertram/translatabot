@@ -15,7 +15,6 @@ type PullRequestProps = {
   repo: string;
   prNumber: number;
   baseBranch: string;
-  prTitle?: string;
 };
 
 export const createTranslationPR = async ({
@@ -25,7 +24,6 @@ export const createTranslationPR = async ({
   owner,
   repo,
   prNumber,
-  prTitle,
   baseBranch,
 }: PullRequestProps) => {
   const logPrefix = `[${owner}/${repo}]`;
@@ -101,7 +99,6 @@ export const createTranslationPR = async ({
     repo,
     defaultFileChanges: translationChanges,
     prNumber,
-    prTitle,
     baseBranch,
   });
   console.log(
