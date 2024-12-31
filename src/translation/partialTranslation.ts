@@ -1,7 +1,7 @@
 import { dirname, join } from "path";
 import { ProbotOctokit } from "probot";
 
-import { APP_NAME, AppConfigFile } from "../config/config";
+import { AppConfigFile } from "../config/config";
 import { Gemini } from "../gemini/gemini";
 import { getDefaultBranch, getFileContent } from "../github/github";
 import { generateBranchName } from "./branchName";
@@ -15,7 +15,6 @@ type PartialTranslationProps = {
   owner: string;
   repo: string;
   defaultFileChanges: string;
-  prTitle?: string;
   prNumber?: number;
   baseBranch?: string;
 };
@@ -27,7 +26,6 @@ export const partialTranslationUpdatePR = async ({
   owner,
   repo,
   defaultFileChanges,
-  prTitle,
   prNumber,
   baseBranch,
 }: PartialTranslationProps) => {
@@ -101,6 +99,7 @@ export const partialTranslationUpdatePR = async ({
     commitHashShort: commitShaShort,
     owner,
     repo,
+    prNumber,
   });
   await octokit.git.createRef({
     owner,
@@ -142,9 +141,9 @@ export const partialTranslationUpdatePR = async ({
     sha: newCommit.sha,
   });
 
-  const targetPRTitle = `[${APP_NAME}] Translations for [${
-    prTitle ?? commitShaShort
-  }]`;
+  const targetPRTitle = `[translatabot] Translations for ${
+    prNumber ? `#${prNumber}` : commitShaShort
+  }`;
   const targetPRBody = `This PR contains updates to all translation files ${
     prNumber ? `based on the changes of #${prNumber}` : ""
   }`;

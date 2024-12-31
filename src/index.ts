@@ -19,12 +19,20 @@ export const App = (app: Probot) => {
   app.on("installation.created", async (context) => {
     await dbConnection;
     const installation = context.payload.installation;
+    const repositorySelection = installation.repository_selection;
+
+    let repos = context.payload.repositories ?? [];
+    if (repositorySelection === "all") {
+      const { data } =
+        await context.octokit.apps.listInstallationReposForAuthenticatedUser({
+          installation_id: installation.id,
+          per_page: 100,
+        });
+      repos = data.repositories;
+    }
 
     // Save installation data
     await upsertInstallation(installation);
-
-    // Create initial PRs for each repository
-    const repos = context.payload.repositories ?? [];
 
     if (repos.length === 0) {
       console.log(`No repositories found for installation ${installation.id}`);
@@ -60,32 +68,52 @@ export const App = (app: Probot) => {
     }
   });
 
-  app.on("installation_repositories", async (context) => {
+  app.on("installation_repositories.added", async (context) => {
     await dbConnection;
     const installation = context.payload.installation;
 
-    // Handle added repositories
-    if (context.payload.repositories_added?.length > 0) {
-      for (const repo of context.payload.repositories_added) {
-        await upsertRepository({
+    for (const repo of context.payload.repositories_added ?? []) {
+      const owner = repo.full_name.split("/")[0];
+      const repoName = repo.full_name.split("/")[1];
+
+      Sentry.setUser({ id: repo.full_name, username: repo.full_name });
+      Sentry.setContext("installation_repositories.added", {
+        owner,
+        repo: repoName,
+      });
+
+      await upsertRepository({
+        installationId: installation.id,
+        name: repo.full_name,
+        isActive: true,
+        action: `repo added to installation`,
+      });
+
+      try {
+        await createInitialPR({
+          octokit: context.octokit,
           installationId: installation.id,
-          name: repo.full_name,
-          isActive: true,
-          action: `repo added to installation`,
+          owner,
+          repo: repoName,
         });
+      } catch (error) {
+        console.error(error as Error);
+        Sentry.captureException(error);
       }
     }
+  });
 
-    // Handle removed repositories
-    if (context.payload.repositories_removed?.length > 0) {
-      for (const repo of context.payload.repositories_removed) {
-        await upsertRepository({
-          installationId: installation.id,
-          name: repo.full_name,
-          isActive: false,
-          action: `repo removed from installation`,
-        });
-      }
+  app.on("installation_repositories.removed", async (context) => {
+    await dbConnection;
+    const installation = context.payload.installation;
+
+    for (const repo of context.payload.repositories_removed ?? []) {
+      await upsertRepository({
+        installationId: installation.id,
+        name: repo.full_name,
+        isActive: false,
+        action: `repo removed from installation`,
+      });
     }
   });
 
@@ -127,7 +155,6 @@ export const App = (app: Probot) => {
       owner,
       repo: repoName,
       prNumber: context.payload.pull_request.number,
-      prTitle: context.payload.pull_request.title,
       baseBranch: context.payload.pull_request.base.ref,
     });
   });

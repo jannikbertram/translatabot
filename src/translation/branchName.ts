@@ -1,7 +1,6 @@
 import { ProbotOctokit } from "probot";
 import { checkBranchExists } from "../github/github";
 import { format } from "date-fns";
-import { APP_NAME } from "../config/config";
 
 const PARTIAL_UPDATE_BRANCH_LABEL = "partial";
 
@@ -11,6 +10,7 @@ export type GenerateBranchNameProps = {
   repo: string;
   language?: string;
   commitHashShort: string;
+  prNumber?: number;
 };
 
 export const generateBranchName = async ({
@@ -19,10 +19,11 @@ export const generateBranchName = async ({
   repo,
   language,
   commitHashShort,
+  prNumber,
 }: GenerateBranchNameProps): Promise<string> => {
-  const defaultBranchName = `${APP_NAME}/${
+  const defaultBranchName = `translatabot/${
     language?.toLowerCase() ?? PARTIAL_UPDATE_BRANCH_LABEL
-  }/${commitHashShort}`;
+  }/${prNumber ? `#${prNumber}` : commitHashShort}`;
 
   const branchExists = await checkBranchExists(
     octokit,
