@@ -24,9 +24,8 @@ export const App = (app: Probot) => {
     let repos = context.payload.repositories ?? [];
     if (repositorySelection === "all") {
       const { data } =
-        await context.octokit.apps.listInstallationReposForAuthenticatedUser({
+        await context.octokit.apps.listReposAccessibleToInstallation({
           installation_id: installation.id,
-          per_page: 100,
         });
       repos = data.repositories;
     }

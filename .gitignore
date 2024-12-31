@@ -9,3 +9,6 @@ lib
 .DS_Store
 website/public
 website/.DS_Store
+
+# contains private data
+test/fixtures/installation.created.all_repos.json
