@@ -5,11 +5,15 @@ const INSTRUCTIONS =
 
 export const fullTranslateFilePrompt = (
   fileContent: string,
-  targetLanguage: string
+  targetLanguage: string,
+  context?: string
 ) => {
   return (
     INSTRUCTIONS +
     `Translate the following file into ${targetLanguage}\n` +
+    (context
+      ? `Previous translation context:\n${context}\n\nContinue translation with:\n`
+      : "") +
     fileContent
   );
 };

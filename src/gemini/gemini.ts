@@ -1,5 +1,6 @@
 import { GenerativeModel, GoogleGenerativeAI } from "@google/generative-ai";
 import { fullTranslateFilePrompt, partialTranslateFilePrompt } from "./prompts";
+import * as Sentry from "@sentry/node";
 
 export class Gemini {
   private model: GenerativeModel;
@@ -21,10 +22,34 @@ export class Gemini {
     targetLanguage: string,
     encoding: "utf8" | "base64" = "base64"
   ): Promise<string> {
-    const prompt = fullTranslateFilePrompt(content, targetLanguage);
+    const lines = content.split("\n");
+    const chunkSize = 200;
+    let translatedContent = "";
+    let context = "";
 
-    const generatedContent = await this.model.generateContent(prompt);
-    return Buffer.from(generatedContent.response.text()).toString(encoding);
+    if (lines.length > chunkSize) {
+      Sentry.captureMessage(
+        "Ouf, this is a big file to translate, hopefully it's going to work!",
+        {
+          level: "warning",
+          extra: {
+            numbeOfLines: lines.length,
+            targetLanguage,
+          },
+        }
+      );
+    }
+
+    for (let i = 0; i < lines.length; i += chunkSize) {
+      const chunk = lines.slice(i, i + chunkSize).join("\n");
+      const prompt = fullTranslateFilePrompt(chunk, targetLanguage, context);
+      const generatedContent = await this.model.generateContent(prompt);
+      const chunkTranslation = generatedContent.response.text();
+      translatedContent += (i > 0 ? "\n" : "") + chunkTranslation;
+      context = chunkTranslation; // Use the previous translation as context for the next chunk
+    }
+
+    return Buffer.from(translatedContent).toString(encoding);
   }
 
   async translatePartial(
