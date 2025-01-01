@@ -90,8 +90,7 @@ export const createTranslationPR = async ({
 
   if (!hasTranslationChanged || !translationChanges) return;
 
-  console.log(`${logPrefix} Translation file has changed in PR #${prNumber}`);
-  await partialTranslationUpdatePR({
+  void partialTranslationUpdatePR({
     octokit,
     config,
     installationId,
@@ -101,9 +100,6 @@ export const createTranslationPR = async ({
     prNumber,
     baseBranch,
   });
-  console.log(
-    `${logPrefix} Created PR for partial translation update of ${config.languages.length} languages`
-  );
 };
 
 const getRelevantPRChanges = async (

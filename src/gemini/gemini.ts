@@ -1,12 +1,6 @@
 import { GenerativeModel, GoogleGenerativeAI } from "@google/generative-ai";
 import { fullTranslateFilePrompt, partialTranslateFilePrompt } from "./prompts";
 
-type FileChange = {
-  line: number;
-  action: "add" | "remove" | "replace";
-  content?: string;
-};
-
 export class Gemini {
   private model: GenerativeModel;
 
@@ -53,57 +47,10 @@ export class Gemini {
     const generatedContent = await this.model.generateContent(prompt);
     const response = generatedContent.response.text();
 
-    const responseLines = response.split("\n");
-    const fileUpdates = JSON.parse(
-      responseLines.slice(1, -1).join("\n")
-    ) as FileChange[];
+    const cleanResponse = response
+      .replace(/^```json\n/, "")
+      .replace(/\n```$/, "");
 
-    return Buffer.from(
-      this.applyChangesToFile(translationFileLines, fileUpdates).join("\n")
-    ).toString(encoding);
+    return Buffer.from(cleanResponse).toString(encoding);
   }
-
-  /*
-   * ChatGPT generated
-   */
-  private applyChangesToFile = (
-    lines: string[],
-    changes: FileChange[]
-  ): string[] => {
-    // Sort changes by line number to ensure they're applied in the correct order
-    const sortedChanges = [...changes].sort((a, b) => a.line - b.line);
-    let modifiedLines = [...lines];
-
-    // Apply removes first
-    sortedChanges
-      .filter((change) => change.action === "remove")
-      .forEach((change) => {
-        const index = change.line - 1;
-        if (index >= 0 && index < modifiedLines.length) {
-          modifiedLines.splice(index, 1);
-        }
-      });
-
-    // Then apply replaces
-    sortedChanges
-      .filter((change) => change.action === "replace")
-      .forEach((change) => {
-        const index = change.line - 1;
-        if (index >= 0 && index < modifiedLines.length && change.content) {
-          modifiedLines[index] = change.content;
-        }
-      });
-
-    // Finally apply adds
-    sortedChanges
-      .filter((change) => change.action === "add")
-      .forEach((change) => {
-        const index = change.line - 1;
-        if (change.content) {
-          modifiedLines.splice(index, 0, change.content);
-        }
-      });
-
-    return modifiedLines;
-  };
 }

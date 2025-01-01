@@ -29,6 +29,9 @@ export const partialTranslationUpdatePR = async ({
   prNumber,
   baseBranch,
 }: PartialTranslationProps) => {
+  const logPrefix = `[${owner}/${repo}]`;
+  console.log(`${logPrefix} Translation file has changed in PR #${prNumber}`);
+
   const baseBranchOrDefault =
     baseBranch ?? (await getDefaultBranch(octokit, owner, repo));
 
@@ -176,4 +179,8 @@ export const partialTranslationUpdatePR = async ({
     branchName,
     type: "partial_translation",
   });
+
+  console.log(
+    `${logPrefix} Created PR for partial translation update of ${config.languages.length} languages`
+  );
 };
