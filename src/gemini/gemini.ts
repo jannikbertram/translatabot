@@ -1,11 +1,6 @@
 import { GenerativeModel, GoogleGenerativeAI } from "@google/generative-ai";
 import { fullTranslateFilePrompt, partialTranslateFilePrompt } from "./prompts";
-
-type FileChange = {
-  line: number;
-  action: "add" | "remove" | "replace";
-  content?: string;
-};
+import * as Sentry from "@sentry/node";
 
 export class Gemini {
   private model: GenerativeModel;
@@ -27,10 +22,34 @@ export class Gemini {
     targetLanguage: string,
     encoding: "utf8" | "base64" = "base64"
   ): Promise<string> {
-    const prompt = fullTranslateFilePrompt(content, targetLanguage);
+    const lines = content.split("\n");
+    const chunkSize = 200;
+    let translatedContent = "";
+    let context = "";
 
-    const generatedContent = await this.model.generateContent(prompt);
-    return Buffer.from(generatedContent.response.text()).toString(encoding);
+    if (lines.length > chunkSize) {
+      Sentry.captureMessage(
+        "Ouf, this is a big file to translate, hopefully it's going to work!",
+        {
+          level: "warning",
+          extra: {
+            numbeOfLines: lines.length,
+            targetLanguage,
+          },
+        }
+      );
+    }
+
+    for (let i = 0; i < lines.length; i += chunkSize) {
+      const chunk = lines.slice(i, i + chunkSize).join("\n");
+      const prompt = fullTranslateFilePrompt(chunk, targetLanguage, context);
+      const generatedContent = await this.model.generateContent(prompt);
+      const chunkTranslation = generatedContent.response.text();
+      translatedContent += (i > 0 ? "\n" : "") + chunkTranslation;
+      context = chunkTranslation; // Use the previous translation as context for the next chunk
+    }
+
+    return Buffer.from(translatedContent).toString(encoding);
   }
 
   async translatePartial(
@@ -53,57 +72,10 @@ export class Gemini {
     const generatedContent = await this.model.generateContent(prompt);
     const response = generatedContent.response.text();
 
-    const responseLines = response.split("\n");
-    const fileUpdates = JSON.parse(
-      responseLines.slice(1, -1).join("\n")
-    ) as FileChange[];
+    const cleanResponse = response
+      .replace(/^```json\n/, "")
+      .replace(/\n```$/, "");
 
-    return Buffer.from(
-      this.applyChangesToFile(translationFileLines, fileUpdates).join("\n")
-    ).toString(encoding);
+    return Buffer.from(cleanResponse).toString(encoding);
   }
-
-  /*
-   * ChatGPT generated
-   */
-  private applyChangesToFile = (
-    lines: string[],
-    changes: FileChange[]
-  ): string[] => {
-    // Sort changes by line number to ensure they're applied in the correct order
-    const sortedChanges = [...changes].sort((a, b) => a.line - b.line);
-    let modifiedLines = [...lines];
-
-    // Apply removes first
-    sortedChanges
-      .filter((change) => change.action === "remove")
-      .forEach((change) => {
-        const index = change.line - 1;
-        if (index >= 0 && index < modifiedLines.length) {
-          modifiedLines.splice(index, 1);
-        }
-      });
-
-    // Then apply replaces
-    sortedChanges
-      .filter((change) => change.action === "replace")
-      .forEach((change) => {
-        const index = change.line - 1;
-        if (index >= 0 && index < modifiedLines.length && change.content) {
-          modifiedLines[index] = change.content;
-        }
-      });
-
-    // Finally apply adds
-    sortedChanges
-      .filter((change) => change.action === "add")
-      .forEach((change) => {
-        const index = change.line - 1;
-        if (change.content) {
-          modifiedLines.splice(index, 0, change.content);
-        }
-      });
-
-    return modifiedLines;
-  };
 }

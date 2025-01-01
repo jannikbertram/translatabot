@@ -17,6 +17,33 @@ type PullRequestProps = {
   baseBranch: string;
 };
 
+const handleNewLanguages = async ({
+  octokit,
+  config,
+  installationId,
+  owner,
+  repo,
+  baseBranch,
+  newLanguages,
+}: PullRequestProps & { newLanguages: TargetLanguage[] }) => {
+  for (const newLanguage of newLanguages) {
+    const logPrefix = `[${owner}/${repo}]`;
+    console.log(`${logPrefix} New language found: '${newLanguage}'`);
+
+    await fullLanguageTranslationPR({
+      octokit,
+      config,
+      installationId,
+      owner,
+      repo,
+      language: newLanguage,
+      baseBranch,
+    });
+
+    console.log(`${logPrefix} Created PR for language '${newLanguage}'`);
+  }
+};
+
 export const createTranslationPR = async ({
   octokit,
   config,
@@ -69,29 +96,21 @@ export const createTranslationPR = async ({
       );
     }
 
-    for (const newLanguage of newLanguages) {
-      console.log(
-        `${logPrefix} New language found in config update from PR #${prNumber}`
-      );
-      await fullLanguageTranslationPR({
-        octokit,
-        config,
-        installationId,
-        owner,
-        repo,
-        language: newLanguage,
-        baseBranch,
-      });
-      console.log(
-        `${logPrefix} Created PR for language '${newLanguage.language}'`
-      );
-    }
+    void handleNewLanguages({
+      octokit,
+      config,
+      installationId,
+      owner,
+      repo,
+      prNumber,
+      baseBranch,
+      newLanguages,
+    });
   }
 
   if (!hasTranslationChanged || !translationChanges) return;
 
-  console.log(`${logPrefix} Translation file has changed in PR #${prNumber}`);
-  await partialTranslationUpdatePR({
+  void partialTranslationUpdatePR({
     octokit,
     config,
     installationId,
@@ -101,9 +120,6 @@ export const createTranslationPR = async ({
     prNumber,
     baseBranch,
   });
-  console.log(
-    `${logPrefix} Created PR for partial translation update of ${config.languages.length} languages`
-  );
 };
 
 const getRelevantPRChanges = async (
