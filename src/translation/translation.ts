@@ -28,7 +28,7 @@ const handleNewLanguages = async ({
 }: PullRequestProps & { newLanguages: TargetLanguage[] }) => {
   for (const newLanguage of newLanguages) {
     const logPrefix = `[${owner}/${repo}]`;
-    console.log(`${logPrefix} New language found: '${newLanguage}'`);
+    console.log(`${logPrefix} New language found: '${newLanguage.language}'`);
 
     await fullLanguageTranslationPR({
       octokit,
@@ -40,7 +40,9 @@ const handleNewLanguages = async ({
       baseBranch,
     });
 
-    console.log(`${logPrefix} Created PR for language '${newLanguage}'`);
+    console.log(
+      `${logPrefix} Created PR for language '${newLanguage.language}'`
+    );
   }
 };
 
