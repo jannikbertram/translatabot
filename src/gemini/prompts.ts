@@ -21,13 +21,17 @@ export const fullTranslateFilePrompt = (
 export const partialTranslateFilePrompt = (
   targetLanguageCurrentContent: string,
   targetLanguage: string,
-  partialChanges: string
+  partialChanges: string,
+  context?: string
 ) => {
   return (
     INSTRUCTIONS +
     "Apply the changes of the git diff into the translation file.\n" +
     `Added values must be translated to ${targetLanguage}.\n` +
     `git diff:\n${partialChanges}\n\n` +
+    (context
+      ? `Previous translation context:\n${context}\n\nContinue translation with:\n`
+      : "") +
     `Translation file content:\n\n${targetLanguageCurrentContent}\n\n` +
     "The output MUST be the updated translation file content without line numbers.\n"
   );
