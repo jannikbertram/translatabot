@@ -59,23 +59,43 @@ export class Gemini {
     encoding: "utf8" | "base64" = "base64"
   ): Promise<string> {
     const translationFileLines = translationFileContent.split("\n");
-    const translationFileWithLineNumber = translationFileLines
-      .map((line, index) => `${index + 1}: ${line}`)
-      .join("\n");
+    const chunkSize = 200;
+    let translatedContent = "";
+    let context = "";
 
-    const prompt = partialTranslateFilePrompt(
-      translationFileWithLineNumber,
-      targetLanguage,
-      changesToBaseTranslation
-    );
+    if (translationFileLines.length > chunkSize) {
+      Sentry.captureMessage(
+        "Large file detected for partial translation, processing in chunks",
+        {
+          level: "warning",
+          extra: {
+            numberOfLines: translationFileLines.length,
+            targetLanguage,
+          },
+        }
+      );
+    }
 
-    const generatedContent = await this.model.generateContent(prompt);
-    const response = generatedContent.response.text();
+    for (let i = 0; i < translationFileLines.length; i += chunkSize) {
+      const chunkLines = translationFileLines.slice(i, i + chunkSize);
+      const chunkWithLineNumbers = chunkLines
+        .map((line, index) => `${i + index + 1}: ${line}`)
+        .join("\n");
 
-    const cleanResponse = response
-      .replace(/^```json\n/, "")
-      .replace(/\n```$/, "");
+      const prompt = partialTranslateFilePrompt(
+        chunkWithLineNumbers,
+        targetLanguage,
+        changesToBaseTranslation,
+        context
+      );
 
-    return Buffer.from(cleanResponse).toString(encoding);
+      const generatedContent = await this.model.generateContent(prompt);
+      const chunkResponse = generatedContent.response.text();
+
+      translatedContent += (i > 0 ? "\n" : "") + chunkResponse;
+      context = chunkResponse; // Use the previous translation as context for the next chunk
+    }
+
+    return Buffer.from(translatedContent).toString(encoding);
   }
 }
