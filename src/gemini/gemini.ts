@@ -45,8 +45,13 @@ export class Gemini {
       const prompt = fullTranslateFilePrompt(chunk, targetLanguage, context);
       const generatedContent = await this.model.generateContent(prompt);
       const chunkTranslation = generatedContent.response.text();
-      translatedContent += (i > 0 ? "\n" : "") + chunkTranslation;
-      context = chunkTranslation; // Use the previous translation as context for the next chunk
+
+      const cleanChunkTranslation = chunkTranslation
+        .replace(/^```.*\n/, "") // Remove opening code fence
+        .replace(/\n```$/, ""); // Remove closing code fence
+
+      translatedContent += (i > 0 ? "\n" : "") + cleanChunkTranslation;
+      context = cleanChunkTranslation; // Use the previous translation as context for the next chunk
     }
 
     return Buffer.from(translatedContent).toString(encoding);
@@ -92,8 +97,12 @@ export class Gemini {
       const generatedContent = await this.model.generateContent(prompt);
       const chunkResponse = generatedContent.response.text();
 
-      translatedContent += (i > 0 ? "\n" : "") + chunkResponse;
-      context = chunkResponse; // Use the previous translation as context for the next chunk
+      const cleanChunkResponse = chunkResponse
+        .replace(/^```.*\n/, "") // Remove opening code fence
+        .replace(/\n```$/, ""); // Remove closing code fence
+
+      translatedContent += (i > 0 ? "\n" : "") + cleanChunkResponse;
+      context = cleanChunkResponse; // Use the previous translation as context for the next chunk
     }
 
     return Buffer.from(translatedContent).toString(encoding);

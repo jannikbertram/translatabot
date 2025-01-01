@@ -3,10 +3,15 @@ import { ProbotOctokit } from "probot";
 
 import { AppConfigFile, TargetLanguage } from "../config/config";
 import { Gemini } from "../gemini/gemini";
-import { getDefaultBranch, getFileContent } from "../github/github";
+import {
+  getDefaultBranch,
+  getFileContent,
+  createPullRequestWithFiles,
+} from "../github/github";
 import { generateBranchName } from "./branchName";
 import { getRepositoryOrCreate } from "../models/repositories/repository.repository";
 import { createPullRequestDoc } from "../models/repositories/pullRequest.repository";
+import { format } from "date-fns";
 
 export type FullTranslationProps = {
   octokit: InstanceType<typeof ProbotOctokit>;
@@ -51,90 +56,36 @@ export const fullLanguageTranslationPR = async ({
     language.language
   );
 
-  // Get the latest commit SHA of the main branch
-  const { data: refData } = await octokit.git.getRef({
-    owner,
-    repo,
-    ref: `heads/${baseBranchOrDefault}`,
-  });
+  const targetPath = join(dirname(config.defaultPath), language.relativePath);
 
-  const mainCommitSha = refData.object.sha;
-
-  // Get the tree SHA of the latest commit
-  const { data: commitData } = await octokit.git.getCommit({
-    owner,
-    repo,
-    commit_sha: mainCommitSha,
-  });
-
-  const treeSha = commitData.tree.sha;
-
-  // Create a new branch
+  // Create a new branch name
   const branchName = await generateBranchName({
     octokit,
     language: language.language,
-    commitHashShort: mainCommitSha.slice(0, 7),
+    fallbackName: format(Date.now(), "yyyyMMdd-HHmm"),
     owner,
     repo,
-  });
-  await octokit.git.createRef({
-    owner,
-    repo,
-    ref: `refs/heads/${branchName}`,
-    sha: mainCommitSha,
-  });
-
-  // 3. Create a new blob for the copied content
-  const { data: newBlob } = await octokit.git.createBlob({
-    owner,
-    repo,
-    content,
-    encoding: "base64",
-  });
-
-  const targetPath = join(dirname(config.defaultPath), language.relativePath);
-  // 4. Create a new tree with the updated de.ts file
-  const { data: newTree } = await octokit.git.createTree({
-    owner,
-    repo,
-    base_tree: treeSha,
-    tree: [
-      {
-        path: targetPath,
-        mode: "100644",
-        type: "blob",
-        sha: newBlob.sha,
-      },
-    ],
-  });
-
-  // 5. Create a new commit with the new tree
-  const { data: newCommit } = await octokit.git.createCommit({
-    owner,
-    repo,
-    message: `Initial translation of ${config.defaultPath} into target languages`,
-    tree: newTree.sha,
-    parents: [mainCommitSha],
-  });
-
-  // 6. Update the branch reference to point to the new commit
-  await octokit.git.updateRef({
-    owner,
-    repo,
-    ref: `heads/${branchName}`,
-    sha: newCommit.sha,
   });
 
   const targetPRTitle = `[translatabot] Translation to ${language.language}`;
   const targetPRBody = `This PR contains the initial translation of \`${config.defaultPath}\` into **${language.language}**.`;
-  // 7. Create a pull request from the new branch to the main branch
-  const pr = await octokit.pulls.create({
+
+  // Create pull request with the translated file
+  const pr = await createPullRequestWithFiles({
+    octokit,
     owner,
     repo,
+    files: [
+      {
+        path: targetPath,
+        content,
+      },
+    ],
     title: targetPRTitle,
-    head: branchName,
-    base: baseBranchOrDefault,
     body: targetPRBody,
+    message: `Initial translation of ${config.defaultPath} into target languages`,
+    branch: branchName,
+    base: baseBranchOrDefault,
   });
 
   const repoName = `${owner}/${repo}`;
@@ -148,7 +99,7 @@ export const fullLanguageTranslationPR = async ({
     installationId,
     repositoryId: repoDoc._id.toString(),
     repositoryFullName: repoName,
-    prNumber: pr.data.number,
+    prNumber: pr.number,
     title: targetPRTitle,
     body: targetPRBody,
     contentPerFile: [

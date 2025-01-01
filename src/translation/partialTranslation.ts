@@ -99,7 +99,7 @@ export const partialTranslationUpdatePR = async ({
   // Create a new branch
   const branchName = await generateBranchName({
     octokit,
-    commitHashShort: commitShaShort,
+    fallbackName: commitShaShort,
     owner,
     repo,
     prNumber,

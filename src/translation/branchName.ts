@@ -9,7 +9,7 @@ export type GenerateBranchNameProps = {
   owner: string;
   repo: string;
   language?: string;
-  commitHashShort: string;
+  fallbackName: string;
   prNumber?: number;
 };
 
@@ -18,12 +18,12 @@ export const generateBranchName = async ({
   owner,
   repo,
   language,
-  commitHashShort,
+  fallbackName,
   prNumber,
 }: GenerateBranchNameProps): Promise<string> => {
   const defaultBranchName = `translatabot/${
     language?.toLowerCase() ?? PARTIAL_UPDATE_BRANCH_LABEL
-  }/${prNumber ? `#${prNumber}` : commitHashShort}`;
+  }/${prNumber ? `#${prNumber}` : fallbackName}`;
 
   const branchExists = await checkBranchExists(
     octokit,

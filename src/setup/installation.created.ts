@@ -1,7 +1,7 @@
 import { ProbotOctokit } from "probot";
 
 import { defaultConfigYaml } from "../config/config";
-import { getDefaultBranch } from "../github/github";
+import { getDefaultBranch, createPullRequestWithFiles } from "../github/github";
 import { findDefaultTranslationFile } from "./translation_file_finder";
 import { createPullRequestDoc } from "../models/repositories/pullRequest.repository";
 import { getRepositoryOrCreate } from "../models/repositories/repository.repository";
@@ -24,23 +24,7 @@ export const createInitialPR = async ({
   owner: string;
   repo: string;
 }) => {
-  const commitMessage = `[translatabot] Add configuration file`;
-
   const defaultBranch = await getDefaultBranch(octokit, owner, repo);
-
-  // Create a new branch from the default branch
-  const { data: refData } = await octokit.git.getRef({
-    owner: owner,
-    repo,
-    ref: `heads/${defaultBranch}`,
-  });
-
-  await octokit.git.createRef({
-    owner,
-    repo,
-    ref: `refs/heads/${INITIAL_BRANCH_NAME}`,
-    sha: refData.object.sha,
-  });
 
   const baseFilePath = await findDefaultTranslationFile(octokit, owner, repo);
 
@@ -53,24 +37,23 @@ export const createInitialPR = async ({
   }
 
   const content = defaultConfigYaml(baseFilePath, "base64");
-  // Create the configuration file in the new branch
-  await octokit.repos.createOrUpdateFileContents({
-    owner: owner,
-    repo,
-    path: CONFIG_FILE_PATH,
-    message: commitMessage,
-    content,
-    branch: INITIAL_BRANCH_NAME,
-  });
 
-  // Create a Pull Request to merge the new configuration
-  const pr = await octokit.pulls.create({
+  // Create pull request with the config file
+  const pr = await createPullRequestWithFiles({
+    octokit,
     owner,
     repo,
+    files: [
+      {
+        path: CONFIG_FILE_PATH,
+        content,
+      },
+    ],
     title: INITIAL_PR_TITLE,
-    head: INITIAL_BRANCH_NAME,
-    base: defaultBranch,
     body: INITIAL_PR_BODY,
+    message: `[translatabot] Add configuration file`,
+    branch: INITIAL_BRANCH_NAME,
+    base: defaultBranch,
   });
 
   const repositoryFullName = `${owner}/${repo}`;
@@ -84,7 +67,7 @@ export const createInitialPR = async ({
     installationId,
     repositoryId: repository._id.toString(),
     repositoryFullName: repositoryFullName,
-    prNumber: pr.data.number,
+    prNumber: pr.number,
     title: INITIAL_PR_TITLE,
     body: INITIAL_PR_BODY,
     contentPerFile: [
