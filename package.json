@@ -24,7 +24,7 @@
     "mongodb-memory-server": "^10.1.2",
     "mongoose": "^8.9.2",
     "probot": "^12.3.3",
-    "yaml": "^2.5.1"
+    "yaml": "^2.7.0"
   },
   "devDependencies": {
     "@types/jest": "^29.5.14",
