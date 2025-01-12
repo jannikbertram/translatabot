@@ -36,3 +36,10 @@ export const partialTranslateFilePrompt = (
     "The output MUST be the updated translation file content without line numbers.\n"
   );
 };
+
+export const translateLabelsPrompt = (
+  labels: string,
+  targetLanguage: string
+) => {
+  return `Translate all of these labels into ${targetLanguage} line by line:\n${labels}`;
+};

@@ -46,10 +46,33 @@ export const fullLanguageTranslationPR = async ({
   }
 
   const GeminiModel = new Gemini();
-  const content = await GeminiModel.translateFull(
-    baseFileContent,
-    language.language
-  );
+  let content: string;
+  const isJsonFile = config.defaultPath.endsWith(".json");
+
+  if (isJsonFile) {
+    const jsonContent = JSON.parse(baseFileContent);
+
+    // Only look at first few lines to detect indentation
+    const firstLines = baseFileContent.split("\n", 3);
+    const indent =
+      firstLines
+        .find((line) => line.startsWith("  ") || line.startsWith("\t"))
+        ?.match(/^(\s+)/)?.[1] || "  ";
+
+    const translatedContent = await GeminiModel.translateFullFromJson(
+      jsonContent,
+      language.language
+    );
+
+    content = Buffer.from(
+      JSON.stringify(translatedContent, null, indent) + "\n" // Newline to make Github happy
+    ).toString("base64");
+  } else {
+    content = await GeminiModel.translateFull(
+      baseFileContent,
+      language.language
+    );
+  }
 
   // Get the latest commit SHA of the main branch
   const { data: refData } = await octokit.git.getRef({

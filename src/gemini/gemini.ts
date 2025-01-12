@@ -1,5 +1,9 @@
 import { GenerativeModel, GoogleGenerativeAI } from "@google/generative-ai";
-import { fullTranslateFilePrompt, partialTranslateFilePrompt } from "./prompts";
+import {
+  fullTranslateFilePrompt,
+  partialTranslateFilePrompt,
+  translateLabelsPrompt,
+} from "./prompts";
 import * as Sentry from "@sentry/node";
 
 export class Gemini {
@@ -106,5 +110,112 @@ export class Gemini {
     }
 
     return Buffer.from(translatedContent).toString(encoding);
+  }
+
+  async translateLabels(
+    labels: string,
+    targetLanguage: string
+  ): Promise<string> {
+    const prompt = translateLabelsPrompt(labels, targetLanguage);
+    const generatedContent = await this.model.generateContent(prompt);
+    const response = generatedContent.response.text();
+    return response;
+  }
+
+  async translateFullFromJson<T>(
+    jsonObj: T,
+    targetLanguage: string
+  ): Promise<T> {
+    // Flatten the object into a map of key-value pairs
+    const flattenedMap = this.flattenObject(jsonObj);
+    const entries = Array.from(flattenedMap.entries());
+    const chunkSize = 200;
+    const translatedMap = new Map<string, string>();
+
+    // Process in chunks of 200 values
+    for (let i = 0; i < entries.length; i += chunkSize) {
+      const chunk = entries.slice(i, i + chunkSize);
+      const valuesToTranslate = chunk.map(([_, value]) => value).join("\n");
+
+      const translatedContent = await this.translateLabels(
+        valuesToTranslate,
+        targetLanguage
+      );
+      const translatedValues = translatedContent.split("\n");
+
+      // Map translated values back to their keys
+      chunk.forEach(([key], index) => {
+        translatedMap.set(key, translatedValues[index]);
+      });
+    }
+
+    // Reconstruct the object with translated values
+    return this.unflattenObject(translatedMap) as T;
+  }
+
+  /**
+   * AI generated code to flatten a nested object into flattened key-value pairs
+   */
+  private flattenObject(obj: any, prefix = ""): Map<string, string> {
+    const flattened = new Map<string, string>();
+
+    for (const key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        const value = obj[key];
+        const newKey = prefix ? `${prefix}.${key}` : key;
+
+        if (typeof value === "object" && value !== null) {
+          if (Array.isArray(value)) {
+            value.forEach((item, index) => {
+              if (typeof item === "string") {
+                flattened.set(`${newKey}[${index}]`, item);
+              } else if (typeof item === "object" && item !== null) {
+                const nested = this.flattenObject(item, `${newKey}[${index}]`);
+                nested.forEach((val, key) => flattened.set(key, val));
+              }
+            });
+          } else {
+            const nested = this.flattenObject(value, newKey);
+            nested.forEach((val, key) => flattened.set(key, val));
+          }
+        } else if (typeof value === "string") {
+          flattened.set(newKey, value);
+        }
+      }
+    }
+
+    return flattened;
+  }
+
+  /**
+   * AI generated code to reconstruct an object from a flattened map of key-value pairs
+   */
+  private unflattenObject(flatMap: Map<string, string>): any {
+    const result: any = {};
+
+    flatMap.forEach((value, key) => {
+      const parts = key.split(/\.|\[|\]/).filter(Boolean);
+      let current = result;
+
+      for (let i = 0; i < parts.length - 1; i++) {
+        const part = parts[i];
+        const nextPart = parts[i + 1];
+        const isNextPartArrayIndex = !isNaN(Number(nextPart));
+
+        if (!(part in current)) {
+          current[part] = isNextPartArrayIndex ? [] : {};
+        }
+        current = current[part];
+      }
+
+      const lastPart = parts[parts.length - 1];
+      if (Array.isArray(current)) {
+        current[Number(lastPart)] = value;
+      } else {
+        current[lastPart] = value;
+      }
+    });
+
+    return result;
   }
 }
