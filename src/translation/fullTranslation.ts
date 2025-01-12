@@ -65,7 +65,7 @@ export const fullLanguageTranslationPR = async ({
     );
 
     content = Buffer.from(
-      JSON.stringify(translatedContent, null, indent)
+      JSON.stringify(translatedContent, null, indent) + "\n" // Newline to make Github happy
     ).toString("base64");
   } else {
     content = await GeminiModel.translateFull(

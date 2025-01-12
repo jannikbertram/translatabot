@@ -6,6 +6,7 @@ import { getFileContent } from "../github/github";
 import { CONFIG_FILE_PATH } from "../setup/installation.created";
 import { fullLanguageTranslationPR } from "./fullTranslation";
 import { partialTranslationUpdatePR } from "./partialTranslation";
+import * as Sentry from "@sentry/node";
 
 type PullRequestProps = {
   octokit: InstanceType<typeof ProbotOctokit>;
@@ -30,16 +31,22 @@ const handleNewLanguages = async ({
     const logPrefix = `[${owner}/${repo}]`;
     console.log(`${logPrefix} New language found: '${newLanguage.language}'`);
 
-    await fullLanguageTranslationPR({
-      octokit,
-      config,
-      installationId,
-      owner,
-      repo,
-      language: newLanguage,
-      baseBranch,
-    });
-
+    try {
+      await fullLanguageTranslationPR({
+        octokit,
+        config,
+        installationId,
+        owner,
+        repo,
+        language: newLanguage,
+        baseBranch,
+      });
+    } catch (error) {
+      console.error(
+        `${logPrefix} Error creating PR for language '${newLanguage.language}': ${error}`
+      );
+      Sentry.captureException(error);
+    }
     console.log(
       `${logPrefix} Created PR for language '${newLanguage.language}'`
     );
