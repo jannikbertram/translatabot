@@ -38,6 +38,37 @@ export const partialTranslationUpdatePR = async ({
   const GeminiModel = new Gemini();
   const blobPerLanguage = [];
   const contentPerFile = [];
+
+  // Get the base file content to handle JSON files
+  const baseFileContent = await getFileContent(
+    octokit,
+    config.defaultPath,
+    owner,
+    repo,
+    { ref: baseBranchOrDefault }
+  );
+
+  if (!baseFileContent) {
+    console.error(
+      `Base file ${config.defaultPath} not found in ${owner}/${repo}`
+    );
+    return;
+  }
+
+  const isJsonFile = config.defaultPath.endsWith(".json");
+  let baseJsonContent;
+  let indent;
+
+  if (isJsonFile) {
+    baseJsonContent = JSON.parse(baseFileContent);
+    // Only look at first few lines to detect indentation
+    const firstLines = baseFileContent.split("\n", 3);
+    indent =
+      firstLines
+        .find((line) => line.startsWith("  ") || line.startsWith("\t"))
+        ?.match(/^(\s+)/)?.[1] || "  ";
+  }
+
   for (const { language, relativePath } of config.languages) {
     const translationFilePath = join(dirname(config.defaultPath), relativePath);
 
@@ -56,11 +87,25 @@ export const partialTranslationUpdatePR = async ({
       continue;
     }
 
-    const content = await GeminiModel.translatePartial(
-      translationFileContent,
-      defaultFileChanges,
-      language
-    );
+    let content: string;
+    if (isJsonFile) {
+      const targetJsonContent = JSON.parse(translationFileContent);
+      const translatedContent = await GeminiModel.translatePartialFromJson(
+        baseJsonContent,
+        targetJsonContent,
+        defaultFileChanges,
+        language
+      );
+      content = Buffer.from(
+        JSON.stringify(translatedContent, null, indent) + "\n" // Newline to make Github happy
+      ).toString("base64");
+    } else {
+      content = await GeminiModel.translatePartial(
+        translationFileContent,
+        defaultFileChanges,
+        language
+      );
+    }
 
     const { data: blob } = await octokit.git.createBlob({
       owner,
