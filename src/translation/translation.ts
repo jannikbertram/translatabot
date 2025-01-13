@@ -8,16 +8,6 @@ import { fullLanguageTranslationPR } from "./fullTranslation";
 import { partialTranslationUpdatePR } from "./partialTranslation";
 import * as Sentry from "@sentry/node";
 
-type PullRequestProps = {
-  octokit: InstanceType<typeof ProbotOctokit>;
-  config: AppConfigFile;
-  installationId: number;
-  owner: string;
-  repo: string;
-  prNumber: number;
-  baseBranch: string;
-};
-
 const handleNewLanguages = async ({
   octokit,
   config,
@@ -26,7 +16,15 @@ const handleNewLanguages = async ({
   repo,
   baseBranch,
   newLanguages,
-}: PullRequestProps & { newLanguages: TargetLanguage[] }) => {
+}: {
+  octokit: InstanceType<typeof ProbotOctokit>;
+  config: AppConfigFile;
+  installationId: number;
+  owner: string;
+  repo: string;
+  baseBranch: string;
+  newLanguages: TargetLanguage[];
+}) => {
   for (const newLanguage of newLanguages) {
     const logPrefix = `[${owner}/${repo}]`;
     console.log(`${logPrefix} New language found: '${newLanguage.language}'`);
@@ -61,17 +59,27 @@ export const createTranslationPR = async ({
   repo,
   prNumber,
   baseBranch,
-}: PullRequestProps) => {
+  baseCommitSha,
+}: {
+  octokit: InstanceType<typeof ProbotOctokit>;
+  config: AppConfigFile;
+  installationId: number;
+  owner: string;
+  repo: string;
+  prNumber: number;
+  baseBranch: string;
+  baseCommitSha: string;
+}) => {
   const logPrefix = `[${owner}/${repo}]`;
   const { hasConfigChanged, hasTranslationChanged, translationChanges } =
-    await getRelevantPRChanges(
+    await getRelevantPRChanges({
       octokit,
-      config.defaultPath,
-      CONFIG_FILE_PATH,
+      defaultTranslationFilePath: config.defaultPath,
+      configFilePath: CONFIG_FILE_PATH,
       owner,
       repo,
-      prNumber
-    );
+      prNumber,
+    });
 
   if (!hasConfigChanged && !hasTranslationChanged) {
     console.log(
@@ -111,7 +119,6 @@ export const createTranslationPR = async ({
       installationId,
       owner,
       repo,
-      prNumber,
       baseBranch,
       newLanguages,
     });
@@ -128,17 +135,25 @@ export const createTranslationPR = async ({
     defaultFileChanges: translationChanges,
     prNumber,
     baseBranch,
+    baseCommitSha,
   });
 };
 
-const getRelevantPRChanges = async (
-  octokit: InstanceType<typeof ProbotOctokit>,
-  defaultTranslationFilePath: string,
-  configFilePath: string,
-  owner: string,
-  repo: string,
-  prNumber: number
-) => {
+const getRelevantPRChanges = async ({
+  octokit,
+  defaultTranslationFilePath,
+  configFilePath,
+  owner,
+  repo,
+  prNumber,
+}: {
+  octokit: InstanceType<typeof ProbotOctokit>;
+  defaultTranslationFilePath: string;
+  configFilePath: string;
+  owner: string;
+  repo: string;
+  prNumber: number;
+}) => {
   const files = await octokit.pulls.listFiles({
     owner,
     repo,

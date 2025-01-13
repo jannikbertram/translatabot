@@ -155,6 +155,7 @@ export const App = (app: Probot) => {
       repo: repoName,
       prNumber: context.payload.pull_request.number,
       baseBranch: context.payload.pull_request.base.ref,
+      baseCommitSha: context.payload.pull_request.base.sha,
     });
   });
 

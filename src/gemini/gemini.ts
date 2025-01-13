@@ -153,43 +153,41 @@ export class Gemini {
     return this.unflattenObject(translatedMap) as T;
   }
 
-  async translatePartialFromJson<T>(
-    baseJsonObj: T,
-    targetLanguageFileContent: T,
-    changesToBaseTranslation: string,
-    targetLanguage: string
-  ): Promise<T> {
-    // Flatten both objects into maps
+  async translatePartialFromJson<T>({
+    baseJsonObj,
+    previousBaseJsonObj,
+    targetLanguageFileObj,
+    targetLanguage,
+  }: {
+    baseJsonObj: T;
+    previousBaseJsonObj: T;
+    targetLanguageFileObj: T;
+    targetLanguage: string;
+  }): Promise<T> {
+    // Flatten all objects into maps
     const baseFlatMap = this.flattenObject(baseJsonObj);
-    const targetFlatMap = this.flattenObject(targetLanguageFileContent);
+    const previousBaseFlatMap = this.flattenObject(previousBaseJsonObj);
+    const targetFlatMap = this.flattenObject(targetLanguageFileObj);
 
-    // Parse the changes to identify modified keys and values
-    const changes = changesToBaseTranslation.split("\n");
-    const modifiedKeys = new Set<string>();
-
-    changes.forEach((change) => {
-      // Extract key from the change description
-      const keyMatch = change.match(/["'](.+?)["']/);
-      if (keyMatch) {
-        const key = keyMatch[1];
-        modifiedKeys.add(key);
-      }
-    });
-
-    // Identify keys that need translation (new or modified)
+    // Identify keys that need translation (changed or new values)
     const keysToTranslate = new Map<string, string>();
+
+    // Check all keys in the base object
     baseFlatMap.forEach((value, key) => {
-      if (!targetFlatMap.has(key) || modifiedKeys.has(key)) {
+      const previousValue = previousBaseFlatMap.get(key);
+
+      // Case 1: New key or changed value
+      if (!previousValue || previousValue !== value) {
         keysToTranslate.set(key, value);
       }
     });
 
     // If there are no changes needed, return the original target content
     if (keysToTranslate.size === 0) {
-      return targetLanguageFileContent;
+      return targetLanguageFileObj;
     }
 
-    // Translate in chunks
+    // Translate changed/new values in chunks
     const entries = Array.from(keysToTranslate.entries());
     const chunkSize = 200;
     const translatedMap = new Map<string, string>();
@@ -210,8 +208,18 @@ export class Gemini {
       });
     }
 
-    // Merge translations with existing target content
+    // Create the final merged map:
+    // 1. Start with existing target language translations
     const mergedMap = new Map(targetFlatMap);
+
+    // 2. Remove keys that were removed in base
+    targetFlatMap.forEach((_, key) => {
+      if (!baseFlatMap.has(key)) {
+        mergedMap.delete(key);
+      }
+    });
+
+    // 3. Add new translations
     translatedMap.forEach((value, key) => {
       mergedMap.set(key, value);
     });
