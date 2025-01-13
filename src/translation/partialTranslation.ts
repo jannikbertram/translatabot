@@ -15,8 +15,9 @@ type PartialTranslationProps = {
   owner: string;
   repo: string;
   defaultFileChanges: string;
-  prNumber?: number;
-  baseBranch?: string;
+  prNumber: number;
+  baseBranch: string;
+  baseCommitSha: string;
 };
 
 export const partialTranslationUpdatePR = async ({
@@ -28,6 +29,7 @@ export const partialTranslationUpdatePR = async ({
   defaultFileChanges,
   prNumber,
   baseBranch,
+  baseCommitSha,
 }: PartialTranslationProps) => {
   const logPrefix = `[${owner}/${repo}]`;
   console.log(`${logPrefix} Translation file has changed in PR #${prNumber}`);
@@ -38,6 +40,52 @@ export const partialTranslationUpdatePR = async ({
   const GeminiModel = new Gemini();
   const blobPerLanguage = [];
   const contentPerFile = [];
+
+  // Get the base file content to handle JSON files
+  const baseFileContent = await getFileContent(
+    octokit,
+    config.defaultPath,
+    owner,
+    repo,
+    { ref: baseBranchOrDefault }
+  );
+
+  const previousBaseFileContent = await getFileContent(
+    octokit,
+    config.defaultPath,
+    owner,
+    repo,
+    { ref: baseCommitSha }
+  );
+
+  if (!baseFileContent) {
+    const errorMsg = `Base file ${config.defaultPath} not found in ${owner}/${repo}`;
+    console.error(errorMsg);
+    throw new Error(errorMsg);
+  }
+
+  if (!previousBaseFileContent) {
+    const errorMsg = `Previous version of base file ${config.defaultPath} with commit sha ${baseCommitSha} not found in ${owner}/${repo}`;
+    console.error(errorMsg);
+    throw new Error(errorMsg);
+  }
+
+  const isJsonFile = config.defaultPath.endsWith(".json");
+  let previousBaseJsonObj;
+  let baseJsonObj;
+  let indent: string = "  ";
+
+  if (isJsonFile) {
+    previousBaseJsonObj = JSON.parse(previousBaseFileContent);
+    baseJsonObj = JSON.parse(baseFileContent);
+    // Only look at first few lines to detect indentation
+    const firstLines = baseFileContent.split("\n", 3);
+    indent =
+      firstLines
+        .find((line) => line.startsWith("  ") || line.startsWith("\t"))
+        ?.match(/^(\s+)/)?.[1] ?? "  ";
+  }
+
   for (const { language, relativePath } of config.languages) {
     const translationFilePath = join(dirname(config.defaultPath), relativePath);
 
@@ -56,11 +104,25 @@ export const partialTranslationUpdatePR = async ({
       continue;
     }
 
-    const content = await GeminiModel.translatePartial(
-      translationFileContent,
-      defaultFileChanges,
-      language
-    );
+    let content: string;
+    if (isJsonFile) {
+      const targetJsonObj = JSON.parse(translationFileContent);
+      const translatedContent = await GeminiModel.translatePartialFromJson({
+        baseJsonObj,
+        previousBaseJsonObj,
+        targetLanguageFileObj: targetJsonObj,
+        targetLanguage: language,
+      });
+      content = Buffer.from(
+        JSON.stringify(translatedContent, null, indent) + "\n" // Newline to make Github happy
+      ).toString("base64");
+    } else {
+      content = await GeminiModel.translatePartial(
+        translationFileContent,
+        defaultFileChanges,
+        language
+      );
+    }
 
     const { data: blob } = await octokit.git.createBlob({
       owner,

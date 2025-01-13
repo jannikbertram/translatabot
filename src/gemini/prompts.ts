@@ -41,5 +41,5 @@ export const translateLabelsPrompt = (
   labels: string,
   targetLanguage: string
 ) => {
-  return `Translate all of these labels into ${targetLanguage} line by line:\n${labels}`;
+  return `Translate all of these labels into ${targetLanguage}. You MUST only return the translated labels line by line.\n\n${labels}`;
 };

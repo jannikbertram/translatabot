@@ -153,6 +153,81 @@ export class Gemini {
     return this.unflattenObject(translatedMap) as T;
   }
 
+  async translatePartialFromJson<T>({
+    baseJsonObj,
+    previousBaseJsonObj,
+    targetLanguageFileObj,
+    targetLanguage,
+  }: {
+    baseJsonObj: T;
+    previousBaseJsonObj: T;
+    targetLanguageFileObj: T;
+    targetLanguage: string;
+  }): Promise<T> {
+    // Flatten all objects into maps
+    const baseFlatMap = this.flattenObject(baseJsonObj);
+    const previousBaseFlatMap = this.flattenObject(previousBaseJsonObj);
+    const targetFlatMap = this.flattenObject(targetLanguageFileObj);
+
+    // Identify keys that need translation (changed or new values)
+    const keysToTranslate = new Map<string, string>();
+
+    // Check all keys in the base object
+    baseFlatMap.forEach((value, key) => {
+      const previousValue = previousBaseFlatMap.get(key);
+
+      // Case 1: New key or changed value
+      if (!previousValue || previousValue !== value) {
+        keysToTranslate.set(key, value);
+      }
+    });
+
+    // If there are no changes needed, return the original target content
+    if (keysToTranslate.size === 0) {
+      return targetLanguageFileObj;
+    }
+
+    // Translate changed/new values in chunks
+    const entries = Array.from(keysToTranslate.entries());
+    const chunkSize = 200;
+    const translatedMap = new Map<string, string>();
+
+    for (let i = 0; i < entries.length; i += chunkSize) {
+      const chunk = entries.slice(i, i + chunkSize);
+      const valuesToTranslate = chunk.map(([_, value]) => value).join("\n");
+
+      const translatedContent = await this.translateLabels(
+        valuesToTranslate,
+        targetLanguage
+      );
+      const translatedValues = translatedContent.split("\n");
+
+      // Map translated values back to their keys
+      chunk.forEach(([key], index) => {
+        translatedMap.set(key, translatedValues[index]);
+      });
+    }
+
+    // Create the final merged map:
+    // 1. Start with existing target language translations
+    const mergedMap = new Map(targetFlatMap);
+
+    // 2. Remove keys that were removed in base
+    targetFlatMap.forEach((_, key) => {
+      if (!baseFlatMap.has(key)) {
+        mergedMap.delete(key);
+      }
+    });
+
+    // 3. Add new translations
+    translatedMap.forEach((value, key) => {
+      mergedMap.set(key, value);
+    });
+
+    // Reconstruct the object with merged translations
+    return this.unflattenObject(mergedMap) as T;
+  }
+
   /**
    * AI generated code to flatten a nested object into flattened key-value pairs
    */
