@@ -22,7 +22,7 @@
     "@sentry/profiling-node": "^8.47.0",
     "date-fns": "^3.6.0",
     "mongodb-memory-server": "^10.1.2",
-    "mongoose": "^8.9.2",
+    "mongoose": "^8.9.6",
     "probot": "^12.3.3",
     "yaml": "^2.5.1"
   },
